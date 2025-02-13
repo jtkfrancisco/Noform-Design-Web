@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Noform Design</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background-color: black;
+        }
+        .image-container {
+            width: 100vw;
+            position: relative;
+        }
+        img {
+            width: 100vw;
+            height: auto;
+            display: block;
+        }
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            display: flex;
+            flex-wrap: wrap;
+            padding: 5px;
+            gap: 5px;
+        }
+        .red-box-01 {
+            background-color: rgba(255, 0, 0, 0.5);
+            width: 10%;
+            height: 10%;
+        }
+        @media screen and (max-width: 768px) {
+            .desktop-image {
+                display: none;
+            }
+            .mobile-container {
+                display: block;
+            }
+        }
+        @media screen and (min-width: 769px) {
+            .mobile-container {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Desktop Image -->
+    <div class="image-container desktop-image">
+        <img src="Website.png" alt="Fullscreen Image">
+        <div class="overlay">
+            <div class="red-box-01"></div>
+            <div class="red-box-02"></div>
+            <div class="red-box-03"></div>
+            <div class="red-box-04"></div>
+            <div class="red-box-05"></div>
+            <div class="red-box-06"></div>
+        </div>
+    </div>
+    
+    <!-- Mobile Images -->
+    <div class="mobile-container">
+        <img src="mobile-01.png" alt="Mobile Image 1">
+        <img src="mobile-02.png" alt="Mobile Image 2">
+    </div>
+</body>
+</html>
