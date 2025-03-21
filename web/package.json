@@ -1,0 +1,29 @@
+{
+	"name": "noform",
+	"version": "1.0.0",
+	"description": "",
+	"source": "src/index.html",
+	"scripts": {
+		"start": "parcel",
+		"build:parcel": "parcel build ./src/index.html --public-url ./ --no-source-maps",
+		"build": "npm run clean && npm run build:parcel",
+		"clean": "rm -rf dist/*"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"dependencies": {
+		"@tailwindcss/cli": "^4.0.8",
+		"imagesloaded": "^5.0.0",
+		"isotope-layout": "^3.0.6",
+		"isotope-packery": "^2.0.1",
+		"jquery": "^3.7.1",
+		"jquery-bridget": "^3.0.1",
+		"micromodal": "^0.4.10",
+		"slick-carousel": "^1.8.1",
+		"tailwindcss": "^4.0.8"
+	},
+	"devDependencies": {
+		"parcel": "^2.13.3"
+	}
+}

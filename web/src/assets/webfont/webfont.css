@@ -1,0 +1,11 @@
+@font-face {
+	font-family: "Acumin Variable Concept";
+	src: "/webfonts/fonts/AcuminVariableConcept.eot";
+	src: "/webfonts/fonts/AcuminVariableConcept.eot?#iefix"
+			format("embedded-opentype"),
+		"/webfonts/fonts/AcuminVariableConcept.woff2" format("woff2"),
+		"/webfonts/fonts/AcuminVariableConcept.woff" format("woff"),
+		"/webfonts/fonts/AcuminVariableConcept.ttf" format("truetype"),
+		"/webfonts/fonts/AcuminVariableConcept.svg#Acumin Variable Concept"
+			format("svg");
+}
