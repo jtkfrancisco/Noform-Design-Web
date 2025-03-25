@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Noform Design</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background-color: black;
+        }
+        .image-container {
+            width: 100vw;
+        }
+        img {
+            width: 100vw;
+            height: auto;
+            display: block;
+        }
+        /* Mobile-specific styles */
+        @media screen and (max-width: 768px) {
+            .desktop-image {
+                display: none;
+            }
+            .mobile-container {
+                display: block;
+            }
+        }
+        /* Hide mobile images on desktop */
+        @media screen and (min-width: 769px) {
+            .mobile-container {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Desktop Image -->
+    <div class="image-container desktop-image">
+        <img src="Website.png" alt="Fullscreen Image">
+    </div>
+    
+    <!-- Mobile Images -->
+    <div class="mobile-container">
+        <img src="mobile-01.png" alt="Mobile Image 1">
+        <img src="mobile-02.png" alt="Mobile Image 2">
+    </div>
+</body>
+</html>
