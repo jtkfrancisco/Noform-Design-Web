@@ -1,5 +1,5 @@
 // WUB-1 offline worker. Bump VERSION when shipping changes to cached files.
-const VERSION = "wub1-v1";
+const VERSION = "wub1-v2";
 const FONTS = "wub1-fonts";
 const CORE = ["./", "index.html", "vendor/tone-14.8.49.js", "manifest.webmanifest", "icon-192.png", "icon-512.png", "apple-touch-icon.png"];
 
