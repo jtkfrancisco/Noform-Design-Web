@@ -126,6 +126,16 @@ select{height:44px;border-radius:10px;border:1px solid var(--line);background:va
 .dgrid .c.b{background:#262d3c}
 .dgrid .c.on{background:var(--dc);box-shadow:0 0 6px var(--dc)}
 .dgrid .c.ph{outline:2px solid rgba(255,255,255,.55);outline-offset:-2px}
+.part{display:flex;flex-direction:column;gap:6px;padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--bg)}
+.prow{display:flex;align-items:center;gap:5px}
+.pnum{font:700 14px var(--mono);color:var(--dim);min-width:18px}
+.psec{width:48px;height:44px;border-radius:10px;border:2px solid var(--sc);background:transparent;color:var(--sc);font:700 18px var(--mono)}
+.pbars{font:700 14px var(--mono);min-width:58px;text-align:center;font-variant-numeric:tabular-nums}
+.moves{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.sq.ps{width:40px}
+.chip2{width:100%;height:40px;padding:0 10px;border-radius:9px;border:1px solid var(--line);background:var(--panel);font:600 13px var(--sans);color:var(--mute)}
+.chip2.on{border-color:var(--q);color:var(--q);background:var(--panel2)}
+.btn:disabled{opacity:.45}
 .rollw{border-radius:10px;overflow:hidden;border:1px solid var(--line)}
 #roll{display:block;width:100%;height:272px;touch-action:none}
 .slots{display:flex;flex-direction:column;gap:6px}
@@ -209,7 +219,7 @@ function exampleSec(){
   for(let i=0;i<32;i++)if(tp[i].x==null){tp[i].x=.3;tp[i].y=.6;}
   return s;
 }
-let S={v:2,bpm:140,key:5,oct:2,bars:2,tingle:.3,sel:0,tab:"drums",example:true,secs:[exampleSec(),newSec(32),newSec(32),newSec(32)]};
+let S={v:2,bpm:140,key:5,oct:2,bars:2,tingle:.3,sel:0,tab:"drums",example:true,song:[],secs:[exampleSec(),newSec(32),newSec(32),newSec(32)]};
 try{
   const r=JSON.parse(localStorage.getItem(KEY)||"null");
   if(r&&r.v===2&&Array.isArray(r.secs))S=Object.assign(S,r);
@@ -260,10 +270,13 @@ async function ensureAudio(){
   try{Tone.setContext(new Tone.Context({latencyHint:"interactive",lookAhead:0.06}));}catch(e){}
   await Tone.start();
   const lim=new Tone.Limiter(-1).toDestination();
-  const comp=new Tone.Compressor({threshold:-14,ratio:3,attack:.01,release:.15}).connect(lim);
+  const mgate=new Tone.Gain(1).connect(lim);
+  const comp=new Tone.Compressor({threshold:-14,ratio:3,attack:.01,release:.15}).connect(mgate);
+  let recDest=null;try{recDest=Tone.getContext().rawContext.createMediaStreamDestination();lim.connect(recDest);}catch(e){}
   const an=new Tone.Analyser("waveform",2048);comp.connect(an);
   const rev=new Tone.Reverb({decay:1.6,wet:.12}).connect(comp);await rev.ready;
-  const bus=new Tone.Gain(1).connect(rev);
+  const mf=new Tone.Filter({type:"lowpass",frequency:20000,rolloff:-24}).connect(rev);
+  const bus=new Tone.Gain(1).connect(mf);
   [0,1,2].forEach(li=>makeVoice(li,bus,comp));
   const dg=new Tone.Gain(.8).connect(bus);
   const kick=new Tone.MembraneSynth({pitchDecay:.045,octaves:6,envelope:{attack:.001,decay:.4,sustain:0,release:.1}});kick.volume.value=2;kick.connect(dg);
@@ -273,7 +286,8 @@ async function ensureAudio(){
   const hat=new Tone.MetalSynth({envelope:{attack:.001,decay:.05,release:.01},harmonicity:5.1,modulationIndex:32,resonance:5000,octaves:1.5});hat.volume.value=-20;hat.connect(dg);
   const clBP=new Tone.Filter({type:"bandpass",frequency:1300,Q:1.2}).connect(dg);
   const clap=new Tone.NoiseSynth({noise:{type:"pink"},envelope:{attack:.003,decay:.14,sustain:0,release:.05}});clap.volume.value=-4;clap.connect(clBP);
-  A={an,dg,kick,snN,snB,hat,clap};
+  const riserG=new Tone.Gain(0).connect(rev);const riserF=new Tone.Filter({type:"bandpass",frequency:300,Q:1.4}).connect(riserG);new Tone.Noise("white").start().connect(riserF);
+  A={an,dg,kick,snN,snB,hat,clap,mgate,mf,recDest,riserG,riserF};
   syncAll();
   T().scheduleRepeat(tick,"16n",0);
 }
@@ -340,6 +354,7 @@ function tick(time){
     if(countIn===0)gstep=0;return;
   }
   const n=L(),s=gstep%n,ds=s%16;
+  if(songOn&&songTick(time,s))return;
   if(s===0&&gstep>0&&queued!==null){const k=queued;queued=null;switchSec(k,time);Tone.Draw.schedule(()=>{renderPanel();renderTop();},time);}
   if(s===0&&armed){recMode=armed.mode;recLi=armed.li;armed=null;Tone.Draw.schedule(()=>{renderTransport();setStatus(recMode==="drums"?"Recording. Tap the drum pads.":recMode==="rec"?"Recording. Play your notes.":"Recording moves. Drag the square.",true);},time);}
   const sc=sec();
@@ -547,7 +562,7 @@ function renderTop(){
     <button class="tb play${playing?" on":""}" data-a="play">${playing?"Stop":"Play"}</button>
     <button class="tb rec${live?" live":""}${busy&&!live?" wait":""}" data-a="rec">${recTxt}</button>
     <div class="secs">${SL.map((l,i)=>`<button class="sec${i===S.sel?" on":""}${queued===i?" q":""}${hasData(i)?" has":""}" data-a="sec" data-i="${i}" aria-label="Section ${l}">${l}${hasData(i)?'<span class="dot"></span>':""}</button>`).join("")}</div>
-    <button class="bpmb" data-a="song" aria-label="Tempo ${S.bpm} BPM. Open song setup"><b>${S.bpm}</b><small>BPM</small></button>`;
+    <button class="bpmb" data-a="arr" aria-label="Song: arrange, tempo and saves. ${S.bpm} BPM"><b>Song</b><small>${S.bpm} BPM</small></button>`;
 }
 function renderTabs(){
   const sc=sec(),k=KITS;
@@ -607,6 +622,122 @@ function songSheet(){
     <div class="grp">${kn("tingle","Tingle",0,1,.01,S.tingle,Math.round(S.tingle*100)+"%")}<p class="desc">Swings the synths between your left and right ears. Use headphones.</p></div>
     ${slotsHTML()}`;
 }
+// ═══════ ARRANGE + SONG PLAYER ═══════
+let songOn=false,songEnded=false,songRec=false,sp={i:0,loop:0},mrec=null,mchunks=[];
+const SECCOL=["#4dffb8","#ffb84d","#ff6fae","#5ad0ff"];
+const MOVES=[["riser","Riser"],["roll","Roll"],["gap","Silence"],["sweep","Sweep"]];
+const lp=b=>Math.max(1,Math.round(b/S.bars));
+function songBars(){return (S.song||[]).reduce((t,p)=>t+p.loops*S.bars,0);}
+function mmss(sec){sec=Math.round(sec);return Math.floor(sec/60)+":"+String(sec%60).padStart(2,"0");}
+function newPart(sec){return{sec,loops:lp(8),riser:false,roll:false,gap:false,sweep:false};}
+function arrangeSheet(){
+  const song=S.song||(S.song=[]),bars=songBars();
+  const rows=song.map((p,i)=>`<div class="part">
+    <div class="prow"><span class="pnum">${i+1}</span>
+      <button class="psec" style="--sc:${SECCOL[p.sec]}" data-a="psec" data-i="${i}" aria-label="Section ${SL[p.sec]}. Tap to change">${SL[p.sec]}</button>
+      <button class="sq ps" data-a="pdn" data-i="${i}" aria-label="Shorter">−</button><span class="pbars">${p.loops*S.bars} bars</span><button class="sq ps" data-a="pup" data-i="${i}" aria-label="Longer">+</button>
+      <span class="sp"></span>
+      ${i>0?`<button class="sq ps" data-a="pmove" data-i="${i}" aria-label="Move up">↑</button>`:""}
+      <button class="sq ps" data-a="pdel" data-i="${i}" aria-label="Remove part" style="color:var(--rec)">✕</button></div>
+    <div class="desc" style="font-size:13px">Ends with</div><div class="moves">${MOVES.map(([k,l])=>`<button class="chip2${p[k]?" on":""}" data-a="pfx" data-i="${i}" data-k="${k}" aria-pressed="${p[k]?"true":"false"}">${l}</button>`).join("")}</div>
+  </div>`).join("");
+  return `
+    <div class="grp"><div class="gt">Your song</div>
+      <p class="desc">${song.length?`${song.length} part${song.length>1?"s":""} · ${bars} bars · ${mmss(bars*4*60/S.bpm)} long`:"No parts yet. Add parts below, or start from the template."}</p>
+      <div class="row"><button class="btn on" data-a="playSong" ${song.length?"":"disabled"}>${songOn&&!songRec?"Stop song":"▶ Play song"}</button><button class="btn" data-a="saveSong" ${song.length?"":"disabled"}>${songOn&&songRec?"Cancel save":"● Play &amp; save WAV"}</button></div>
+      <p class="desc">Play &amp; save WAV plays the whole song once, then saves it as an audio file. Keep the app open until it finishes.</p></div>
+    <div class="grp"><div class="gt">Parts</div>${rows||""}
+      <div class="row"><span class="desc">Add part</span>${SL.map((l,i)=>`<button class="psec" style="--sc:${SECCOL[i]}" data-a="padd" data-s="${i}" aria-label="Add section ${l}">${l}</button>`).join("")}</div>
+      <p class="desc">Each part plays one section for a number of bars. Tap a part's letter to change its section. The move you pick happens in the part's last bar and leads into the next part.</p></div>
+    <div class="grp"><div class="gt">Start from a template</div>
+      <div class="row"><button class="btn" data-a="tpl">${ui.arm==="tpl"?"Tap again to replace your parts":"Classic dubstep"}</button></div>
+      <p class="desc">Intro, build, drop, break, build, switch, outro. It expects A as your intro, B as your build, C as your drop and D as your second drop.</p></div>`;
+}
+function later(fn,time){setTimeout(fn,Math.max(0,(time-Tone.now())*1000));}
+function songStatus(){const p=S.song[sp.i];if(!p)return "";return `Song · part ${sp.i+1} of ${S.song.length} · ${SL[p.sec]} · bar ${sp.loop*S.bars+1} of ${p.loops*S.bars}`;}
+function resetMoves(time){
+  if(!A)return;
+  A.mgate.gain.cancelScheduledValues(time);A.mgate.gain.setValueAtTime(1,time);
+  A.mf.frequency.cancelScheduledValues(time);A.mf.frequency.setValueAtTime(20000,time);
+  A.riserG.gain.cancelScheduledValues(time);A.riserG.gain.setValueAtTime(0,time);
+}
+function scheduleMoves(p,time){
+  const sd=stepDur(),bar=16*sd;
+  if(p.riser){A.riserF.frequency.cancelScheduledValues(time);A.riserF.frequency.setValueAtTime(300,time);A.riserF.frequency.exponentialRampToValueAtTime(9000,time+bar);
+    A.riserG.gain.cancelScheduledValues(time);A.riserG.gain.setValueAtTime(0,time);A.riserG.gain.linearRampToValueAtTime(.35,time+bar*.97);A.riserG.gain.setValueAtTime(0,time+bar);}
+  if(p.roll){
+    if(!A.rollN){const bp=new Tone.Filter({type:"bandpass",frequency:2400,Q:.8}).connect(A.dg);
+      A.rollN=new Tone.NoiseSynth({noise:{type:"white"},envelope:{attack:.001,decay:.09,sustain:0,release:.03}});A.rollN.volume.value=-3;A.rollN.connect(bp);
+      A.rollB=new Tone.MembraneSynth({pitchDecay:.015,octaves:2,envelope:{attack:.001,decay:.07,sustain:0,release:.03}});A.rollB.volume.value=-8;A.rollB.connect(A.dg);}
+    [0,2,4,6,8,9,10,11,12,12.5,13,13.5,14,14.5,15,15.5].forEach(h=>{const t=time+h*sd+.0005,v=.3+.7*(h/16);
+      A.rollN.triggerAttackRelease("32n",t,v);A.rollB.triggerAttackRelease(Tone.Frequency("G2").transpose(Math.round(h/2)),"32n",t,v*.8);});}
+  if(p.sweep){A.mf.frequency.cancelScheduledValues(time);A.mf.frequency.setValueAtTime(20000,time);A.mf.frequency.exponentialRampToValueAtTime(250,time+bar);}
+}
+function songTick(time,s){
+  if(songEnded)return true;
+  if(!S.song[sp.i]){later(()=>finishSong(false),time);return true;}
+  if(s===0&&gstep>0){
+    sp.loop++;
+    if(sp.loop>=S.song[sp.i].loops){
+      sp.i++;sp.loop=0;resetMoves(time);
+      if(sp.i>=S.song.length){[0,1,2].forEach(li=>{if(V[li].cur!==null)release(li,time);});songEnded=true;later(()=>finishSong(true),time);return true;}
+      const p=S.song[sp.i];if(p.sec!==S.sel)switchSec(p.sec,time);
+      later(()=>{renderTop();renderTabs();renderLbar();if(ui.sheet==="layer")renderSheet();},time);
+    }
+    later(()=>{if(songOn)setStatus(songStatus(),songRec);},time);
+  }
+  const p=S.song[sp.i],n=L();
+  if(sp.loop===p.loops-1){
+    if(s===n-16)scheduleMoves(p,time);
+    if(p.gap&&s===n-4){A.mgate.gain.cancelScheduledValues(time);A.mgate.gain.setValueAtTime(0,time);}
+  }
+  return false;
+}
+async function startSong(record){
+  if(!S.song||!S.song.length){setStatus("Add a part first.",true);return;}
+  try{await ensureAudio();}catch(e){return showErr(e);}
+  if(playing)await togglePlay();
+  recMode="off";recLi=null;armed=null;queued=null;countIn=0;
+  sp={i:0,loop:0};S.sel=S.song[0].sec;syncAll();resetMoves(Tone.now());
+  if(record){
+    if(!A.recDest||!window.MediaRecorder){setStatus("This browser can't save audio. Try Chrome.",true);return;}
+    mchunks=[];try{mrec=new MediaRecorder(A.recDest.stream);}catch(e){setStatus("Could not start saving audio.",true);return;}
+    mrec.ondataavailable=ev=>{if(ev.data&&ev.data.size)mchunks.push(ev.data);};
+    mrec.start(250);
+  }
+  songEnded=false;songOn=true;songRec=!!record;
+  await togglePlay();
+  setStatus(songStatus(),songRec);
+  renderTop();renderTabs();renderLbar();renderSurface();renderSheet();
+}
+let finishing=false;
+async function finishSong(complete){
+  if(finishing)return;finishing=true;
+  const wasRec=songRec;songOn=false;songRec=false;
+  if(playing)await togglePlay();
+  if(A)resetMoves(Tone.now());
+  if(wasRec&&mrec){
+    const r=mrec;mrec=null;
+    if(!complete){try{r.stop();}catch(e){}setStatus("Save cancelled. Nothing was saved.");}
+    else{setStatus("Finishing the file…",true);setTimeout(()=>{r.onstop=()=>exportWav();try{r.stop();}catch(e){exportWav();}},1800);}
+  }else setStatus(complete?"Song finished.":"Song stopped.",false,complete);
+  finishing=false;renderTop();if(ui.sheet)renderSheet();
+}
+async function exportWav(){
+  try{
+    const blob=new Blob(mchunks,{type:mchunks[0]&&mchunks[0].type||"audio/webm"});
+    const buf=await Tone.getContext().rawContext.decodeAudioData(await blob.arrayBuffer());
+    const wav=encodeWAV(buf),url=URL.createObjectURL(wav),a=document.createElement("a");
+    const name=(S.name||"wub1-song").replace(/[^\w\- ]+/g,"").trim().replace(/\s+/g,"-")||"wub1-song";
+    a.href=url;a.download=name+"-"+S.bpm+"bpm.wav";document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),60000);
+    setStatus("Saved "+a.download+" to your downloads.",false,true);
+  }catch(e){setStatus("Could not make the WAV file. Try again.",true);}
+}
+function encodeWAV(buf){const nCh=buf.numberOfChannels,sr=buf.sampleRate,ns=buf.length,ba=nCh*2,ds=ns*ba,ab=new ArrayBuffer(44+ds),v=new DataView(ab);const w=(o,s)=>{for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i));};
+  w(0,"RIFF");v.setUint32(4,36+ds,true);w(8,"WAVE");w(12,"fmt ");v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,nCh,true);v.setUint32(24,sr,true);v.setUint32(28,sr*ba,true);v.setUint16(32,ba,true);v.setUint16(34,16,true);w(36,"data");v.setUint32(40,ds,true);
+  const ch=[];for(let c=0;c<nCh;c++)ch.push(buf.getChannelData(c));let off=44;for(let i=0;i<ns;i++)for(let c=0;c<nCh;c++){const s=Math.max(-1,Math.min(1,ch[c][i]));v.setInt16(off,s<0?s*0x8000:s*0x7FFF,true);off+=2;}
+  return new Blob([ab],{type:"audio/wav"});}
 // ═══════ SAVE SLOTS ═══════
 const SLOTKEY="noform-wub1-slots",NSLOT=8;
 function readSlots(){try{const r=JSON.parse(localStorage.getItem(SLOTKEY)||"null");if(Array.isArray(r)){while(r.length<NSLOT)r.push(null);return r;}}catch(e){}return Array(NSLOT).fill(null);}
@@ -638,15 +769,16 @@ function loadSong(d){
   if(!d||d.v!==2||!Array.isArray(d.secs)||d.secs.length!==4)throw new Error("bad");
   if(playing)togglePlay();
   queued=null;recMode="off";armed=null;countIn=0;
-  S=Object.assign({},S,d);S.example=false;fitTracks();if(A)syncAll();save();
+  if(songOn)finishSong(false);
+  S=Object.assign({},S,d);if(!Array.isArray(S.song))S.song=[];S.example=false;fitTracks();if(A)syncAll();save();
   renderTop();renderTabs();renderLbar();renderSurface();renderSheet();
 }
 function renderSheet(){
   const w=$("#sheetwrap");if(!ui.sheet){w.innerHTML="";return;}
   const li=tabLi(),col=li<0?DRUMC:LAYERS[li].c,name=li<0?"Drums":LAYERS[li].n;
-  w.innerHTML=`<div class="scrim" data-a="close"></div><div class="sheet" style="--cc:${ui.sheet==="song"?"#4dffb8":col}" role="dialog" aria-label="Setup">
-    <div class="hd"><button class="seg${ui.sheet==="layer"?" on":""}" data-a="setup">${name}</button><button class="seg${ui.sheet==="song"?" on":""}" data-a="song">Song</button><button class="done" data-a="close">Done</button></div>
-    <div class="bd">${ui.sheet==="song"?songSheet():layerSheet(li)}</div></div>`;
+  w.innerHTML=`<div class="scrim" data-a="close"></div><div class="sheet" style="--cc:${ui.sheet==="layer"?col:"#4dffb8"}" role="dialog" aria-label="Setup">
+    <div class="hd"><button class="seg${ui.sheet==="layer"?" on":""}" data-a="setup">${name}</button><button class="seg${ui.sheet==="arr"?" on":""}" data-a="arr">Arrange</button><button class="seg${ui.sheet==="song"?" on":""}" data-a="song">Settings</button><button class="done" data-a="close">Done</button></div>
+    <div class="bd">${ui.sheet==="song"?songSheet():ui.sheet==="arr"?arrangeSheet():layerSheet(li)}</div></div>`;
   lastDS=-1;if(ui.rollPage>=S.bars)ui.rollPage=0;requestAnimationFrame(fit);
 }
 // names the engine calls
@@ -658,12 +790,28 @@ function renderAll(){renderTop();renderTabs();renderLbar();renderSurface();rende
 document.addEventListener("click",e=>{
   const t=e.target.closest("[data-a]");if(!t)return;
   const a=t.dataset.a,li=tabLi(),sc=sec();
-  const armers=["dclear","lclear","slotSave","slotLoad","slotDel","codeLoad","newSong","clearSec"];
+  const armers=["dclear","lclear","slotSave","slotLoad","slotDel","codeLoad","newSong","clearSec","tpl"];
   if(!armers.includes(a)&&ui.arm!==null){ui.arm=null;if(ui.sheet&&a!=="close")renderSheet();}
+  if(songOn&&["rec","moves","sec"].includes(a)){setStatus("Stop the song first.",true);return;}
+  const P=S.song||(S.song=[]),pi=+t.dataset.i;
   switch(a){
-    case"play":return void togglePlay();
+    case"play":if(songOn)return void finishSong(false);return void togglePlay();
     case"rec":return void startRec("rec");
     case"moves":return void startRec("moves");
+    case"arr":ui.sheet="arr";renderSheet();return;
+    case"playSong":if(songOn)return void finishSong(false);return void startSong(false);
+    case"saveSong":if(songOn)return void finishSong(false);return void startSong(true);
+    case"padd":P.push(newPart(+t.dataset.s));renderSheet();break;
+    case"psec":P[pi].sec=(P[pi].sec+1)%4;renderSheet();break;
+    case"pup":P[pi].loops=Math.min(lp(64),P[pi].loops+1);renderSheet();break;
+    case"pdn":P[pi].loops=Math.max(1,P[pi].loops-1);renderSheet();break;
+    case"pdel":P.splice(pi,1);renderSheet();break;
+    case"pmove":if(pi>0){const x=P[pi];P[pi]=P[pi-1];P[pi-1]=x;}renderSheet();break;
+    case"pfx":P[pi][t.dataset.k]=!P[pi][t.dataset.k];renderSheet();break;
+    case"tpl":{if(P.length&&ui.arm!=="tpl"){ui.arm="tpl";renderSheet();return;}ui.arm=null;
+      const mk=(sec,bars,fx)=>Object.assign(newPart(sec),{loops:lp(bars)},fx||{});
+      S.song=[mk(0,8,{sweep:false}),mk(1,8,{riser:true,roll:true,gap:true}),mk(2,16),mk(0,8),mk(1,8,{riser:true,roll:true,gap:true}),mk(3,16),mk(0,8,{sweep:true})];
+      renderSheet();setStatus("Template loaded. Tap Play song.",false,true);break;}
     case"setup":ui.sheet="layer";renderSheet();return;
     case"song":ui.sheet="song";renderSheet();return;
     case"close":ui.sheet=null;renderSheet();return;
@@ -684,7 +832,7 @@ document.addEventListener("click",e=>{
     case"bars":S.bars=+t.dataset.b;fitTracks();renderSheet();break;
     case"rpage":ui.rollPage=+t.dataset.p;renderSheet();return;
     case"newSong":{if(ui.arm!=="new"){ui.arm="new";renderSheet();return;}ui.arm=null;
-      loadSong({v:2,bpm:140,key:5,oct:2,bars:2,tingle:.3,sel:0,tab:"drums",name:"",example:false,secs:[0,1,2,3].map(()=>newSec(32))});
+      loadSong({v:2,bpm:140,key:5,oct:2,bars:2,tingle:.3,sel:0,tab:"drums",name:"",example:false,song:[],secs:[0,1,2,3].map(()=>newSec(32))});
       setStatus("New song. Start with a beat on the Drums tab.",false,true);return;}
     case"clearSec":{if(ui.arm!=="csec"){ui.arm="csec";renderSheet();return;}ui.arm=null;
       if(A)[0,1,2].forEach(li=>{if(V[li].cur!==null)release(li,Tone.now());});
