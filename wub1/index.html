@@ -224,6 +224,92 @@ kbd{font:600 11px var(--mono);color:var(--dim);border:1px solid var(--line);bord
 #tl{display:block;height:242px;touch-action:none;cursor:default}
 body.desk .sheet{left:50%;right:auto;bottom:auto;top:6vh;transform:translateX(-50%);width:min(620px,92vw);max-height:86vh;border-radius:16px;border:1px solid var(--line);border-top:3px solid var(--cc)}
 body.desk .sheet .hd,body.desk .sheet .bd{padding-left:16px;padding-right:16px}
+/* ═══ Desktop polish ═══ */
+body.desk{--d0:#0b0c0f;--d1:#14161b;--d2:#1c1f26;--d3:#262a33;--hair:rgba(255,255,255,.08);--t1:#f3f4f7;--t2:#b4bac6;--t3:#8e95a5;background:var(--d0)}
+body.desk #desk{grid-template-rows:64px minmax(0,1fr) 300px;background:var(--hair)}
+body.desk .dp{background:var(--d1)}
+body.desk .dph{height:40px;background:var(--d1);border-bottom:1px solid var(--hair);font:600 13px var(--sans);color:var(--t2);letter-spacing:.01em;padding:0 14px}
+body.desk .dpb{padding:12px;gap:12px}
+#dtool{background:linear-gradient(#17191f,#121418);gap:10px;padding:0 16px;border-bottom:1px solid var(--hair)}
+.dbrand{margin-right:6px}.dbrand b{font:700 17px var(--mono);letter-spacing:.02em}.dbrand span{font:600 11px var(--sans);color:var(--t3)}
+.tgroup{display:flex;align-items:center;gap:2px;padding:3px;border-radius:11px;background:var(--d0);border:1px solid var(--hair)}
+.tbtn{height:34px;padding:0 13px;border-radius:8px;border:0;background:transparent;font:600 14px var(--sans);color:var(--t1);white-space:nowrap;transition:background .12s,color .12s}
+.tbtn:hover{background:var(--d3)}
+.tbtn.sq{width:34px;padding:0;font-size:18px}
+.tbtn.on{background:rgba(77,255,184,.16);color:var(--go)}
+.tbtn.rec{color:#ff7482}
+.tbtn.rec.live{background:var(--rec);color:#fff}
+.tbtn.solid{background:var(--t1);color:#0b0c0f;height:40px;border-radius:10px;padding:0 16px}
+.tbtn.solid:hover{background:#fff}
+#dtool>.tbtn:not(.solid){height:40px;border-radius:10px;background:var(--d2);border:1px solid var(--hair)}
+#dtool>.tbtn:not(.solid):hover{background:var(--d3)}
+.tseg{width:36px;height:34px;border:0;border-radius:8px;background:transparent;font:700 15px var(--mono);color:var(--t3);position:relative}
+.tseg:hover{color:var(--t1);background:var(--d3)}
+.tseg.on{background:var(--d3);color:var(--sc);box-shadow:inset 0 -2px 0 var(--sc)}
+.tseg.q{color:var(--q);box-shadow:inset 0 0 0 1px var(--q)}
+.lcd{display:flex;flex-direction:column;justify-content:center;min-width:230px;height:46px;padding:0 14px;border-radius:11px;background:#07080a;border:1px solid var(--hair);box-shadow:inset 0 1px 6px rgba(0,0,0,.6)}
+.lcd b{font:600 20px/1.1 var(--mono);color:var(--go);letter-spacing:.02em}
+.lcd span{font:500 12px var(--sans);color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tbpm{display:flex;flex-direction:column;align-items:center;min-width:46px;line-height:1}
+.tbpm b{font:700 16px var(--mono)}.tbpm small{font:600 11px var(--sans);color:var(--t3);margin-top:2px}
+#desk select,.tsel{height:40px;border-radius:10px;border:1px solid var(--hair);background:var(--d2);color:var(--t1);font:600 14px var(--sans);padding:0 10px}
+/* sections sidebar */
+.pcard{border:1px solid var(--hair);border-radius:12px;background:var(--d2);padding:10px;gap:8px;transition:border-color .12s,background .12s}
+.pcard:hover{background:var(--d3)}
+.pcard.on{border-color:var(--sc);box-shadow:none;background:color-mix(in srgb,var(--sc) 9%,var(--d2))}
+.pct b{display:grid;place-items:center;width:26px;height:26px;border-radius:7px;background:var(--sc);color:#0b0c0f;font:700 15px var(--mono)}
+.pct span{color:var(--t3)}
+.thumb{height:36px;border-radius:7px}
+body.desk #dproj .dpb{gap:10px}
+.pcard{padding:9px 10px}
+.dtlbody{grid-template-columns:170px minmax(0,1fr)!important}
+.dmini{height:28px;padding:0 10px;border-radius:7px;border:1px solid var(--hair);background:var(--d1);font:600 12px var(--sans);color:var(--t2)}
+.dmini:hover{color:var(--t1);background:var(--d3)}
+.dmini.on{background:rgba(255,77,94,.16);border-color:transparent;color:#ff7482}
+.dgroup.flat{border:0;padding:4px 0 0}
+/* inspector */
+.dgroup{gap:10px;padding:2px 2px 14px;border-bottom:1px solid var(--hair)}
+.dgt{font:600 15px var(--sans);color:var(--t1)}
+.dgt2{font:600 13px var(--sans);color:var(--t3)}
+.dhint{color:var(--t2)}
+.dt{height:36px;border-radius:9px;border:1px solid var(--hair);background:var(--d2);color:var(--t1);transition:background .12s}
+.dt:hover{background:var(--d3);border-color:var(--hair)}
+.dt.on{background:color-mix(in srgb,var(--cc,var(--go)) 18%,var(--d2));border-color:transparent;color:var(--cc,var(--go))}
+.dt.mv{background:rgba(255,184,77,.16);border-color:transparent;color:#ffc56b}
+.dt.danger{color:#ff7482;border-color:var(--hair)}
+.dsq{border-radius:9px;border:1px solid var(--hair);background:var(--d2)}
+.dsec{border-width:1px;border-color:var(--hair);background:var(--d2);color:var(--t3)}
+.dsec.on{background:var(--sc);border-color:var(--sc);color:#0b0c0f}
+.dmix{grid-template-columns:64px 30px minmax(0,1fr)}
+#desk input[type=range]{height:28px}
+#desk input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:2px;background:linear-gradient(90deg,var(--cc) var(--p,50%),#2b2f38 var(--p,50%))}
+#desk input[type=range]::-moz-range-track{height:4px;border-radius:2px;background:#2b2f38}
+#desk input[type=range]::-moz-range-progress{height:4px;border-radius:2px;background:var(--cc)}
+#desk input[type=range]::-webkit-slider-thumb{width:16px;height:16px;margin-top:-6px;border:0;background:#f3f4f7;box-shadow:0 1px 4px rgba(0,0,0,.5)}
+#desk input[type=range]::-moz-range-thumb{width:16px;height:16px;border:0;background:#f3f4f7}
+details.keys summary{cursor:pointer;list-style:none;color:var(--t2);font:600 14px var(--sans)}
+details.keys summary::before{content:"▸ ";color:var(--t3)}details.keys[open] summary::before{content:"▾ "}
+details.keys{border-bottom:0}
+/* viewer */
+.dvtabs{background:var(--d1)}
+.dvseg{display:flex;gap:2px;padding:3px;border-radius:10px;background:var(--d0);border:1px solid var(--hair)}
+.dvt{height:28px;border:0;border-radius:7px;background:transparent;color:var(--t3);font:600 13px var(--sans);padding:0 10px}
+.dvt:hover{color:var(--t1)}
+.dvt.on{background:var(--d3);color:var(--t1);box-shadow:inset 0 -2px 0 var(--lc)}
+kbd{border-color:var(--hair);color:var(--t3)}
+.dvsec{font:700 13px var(--mono);color:var(--sc)}
+.dstatus{color:var(--t2);font-weight:500}
+.dvsplit,.dvdrums{padding:16px;gap:16px}
+.dvrollw,.dvgridw,.dvxy{border-color:var(--hair);border-radius:12px}
+/* timeline */
+#dtlhead{background:var(--d1);border-right:1px solid var(--hair)}
+.tlh{border-bottom:1px solid var(--hair);color:var(--t2);font:600 13px var(--sans);padding:0 12px}
+.tlh.two>div{display:flex;flex-direction:column;line-height:1.25}
+.tlh.two small{font:500 12px var(--sans);color:var(--t3)}
+.dtlhint{display:none}.dtlhint2{font:500 13px var(--sans);color:var(--t3);overflow:hidden;text-overflow:ellipsis}
+#dzoom{--cc:#8e95a5}
+#dtlscroll::-webkit-scrollbar{height:10px}#dtlscroll::-webkit-scrollbar-thumb{background:#2b2f38;border-radius:5px}#dtlscroll::-webkit-scrollbar-track{background:var(--d1)}
+body.desk .sheet{box-shadow:0 30px 80px rgba(0,0,0,.6)}
 @media (max-width:370px){.tb{padding:0 7px;font-size:14px}.tb.play{min-width:58px}.tb.rec{min-width:52px}.sec{font-size:15px}.pad b{font-size:17px}.tab b{font-size:14px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -245,7 +331,7 @@ body.desk .sheet .hd,body.desk .sheet .bd{padding-left:16px;padding-right:16px}
   <section class="dp" id="dview"><div class="dph dvtabs" id="dvtabs"></div><div id="dvbody"></div></section>
   <section class="dp" id="dinsp"></section>
   <section class="dp" id="dtl">
-    <div class="dph"><span>Timeline</span><span class="dhint dtlhint">Drag clips to reorder. Drag a clip's right edge to resize. Click bar numbers to set the start point. Click a lane to add a keyframe, drag to shape it, double-click to remove it.</span><span class="sp"></span><label for="dzoom">Zoom</label><input type="range" id="dzoom" min="8" max="96" value="28" style="width:140px;--cc:var(--go)"></div>
+    <div class="dph"><span>Timeline</span><span class="dtlhint2">Drag clips to reorder · drag a clip's right edge to resize · click bar numbers to set the start</span><span class="dhint dtlhint">Drag clips to reorder. Drag a clip's right edge to resize. Click bar numbers to set the start point. Click a lane to add a keyframe, drag to shape it, double-click to remove it.</span><span class="sp"></span><label for="dzoom">Zoom</label><input type="range" id="dzoom" min="8" max="96" value="28" style="width:140px;--cc:#8e95a5;--p:22%"></div>
     <div class="dtlbody"><div id="dtlhead"></div><div id="dtlscroll"><canvas id="tl"></canvas></div></div>
   </section>
 </div>
@@ -990,59 +1076,64 @@ function resetAuto(time){if(!A)return;A.af.frequency.cancelScheduledValues(time)
 function seekSong(bar){ui.cursor=Math.max(0,bar);if(songOn&&!songRec){finishSong(false).then(()=>startSong(false,ui.cursor));}touch();}
 
 // ── Render ──
+function setH(el,h){if(!el)return false;if(el._h===h)return false;el._h=h;el.innerHTML=h;return true;}
 function deskRender(){
   deskDirty=false;
   const li=tabLi(),sc=sec(),busy=recMode!=="off"||armed||countIn,live=recMode==="drums"||recMode==="rec";
   const recTxt=live?"● Recording":busy&&!(armed&&armed.mode==="moves")&&recMode!=="moves"?"Cancel":"● Rec";
   const others=[0,1,2,3].filter(i=>i!==S.sel);if(!others.includes(ui.copyTo))ui.copyTo=others[0];
-  $("#dtool").innerHTML=`
+  const secOn=playing&&!songOn,songPl=songOn&&!songRec;
+  let canv=false;
+  setH($("#dtool"),`
     <div class="dbrand"><b>WUB-1</b><span>Noform</span></div>
-    <button class="dt${playing&&!songOn?" on":""}" data-d="playSec" title="Shift + Space">${playing&&!songOn?"■ Stop":"▶ Section"}</button>
-    <button class="dt${songOn&&!songRec?" on":""}" data-d="playSong" title="Space">${songOn&&!songRec?"■ Stop":"▶ Song"}</button>
-    <button class="dt rec${live?" live":""}" data-d="rec" title="R">${recTxt}</button>
-    ${li>=0?`<button class="dt${recMode==="moves"?" on":""}" data-d="moves">${recMode==="moves"?"● Moves":armed&&armed.mode==="moves"?"Cancel":"Redo moves"}</button>`:""}
-    <div class="dsep"></div>
-    <div class="dsecs">${SL.map((l,i)=>`<button class="dsec${i===S.sel?" on":""}${queued===i?" q":""}" style="--sc:${SECCOL[i]}" data-d="sec" data-i="${i}">${l}</button>`).join("")}</div>
-    <div class="dtime" id="dtime"></div>
+    <div class="tgroup">
+      <button class="tbtn${secOn?" on":""}" data-d="playSec" title="Loop this section (Shift + Space)">${secOn?"■":"▶"} Section</button>
+      <button class="tbtn${songPl?" on":""}" data-d="playSong" title="Play the song from the cursor (Space)">${songPl?"■":"▶"} Song</button>
+      <button class="tbtn rec${live?" live":""}" data-d="rec" title="Record (R)">${recTxt}</button>
+      ${li>=0?`<button class="tbtn${recMode==="moves"?" on":""}" data-d="moves" title="Record only the wub pad moves">${recMode==="moves"?"● Moves":armed&&armed.mode==="moves"?"Cancel":"Redo moves"}</button>`:""}
+    </div>
+    <div class="lcd"><b id="dtime">0:00</b><span id="dpos"></span></div>
+    <div class="tgroup segd">${SL.map((l,i)=>`<button class="tseg${i===S.sel?" on":""}${queued===i?" q":""}" style="--sc:${SECCOL[i]}" data-d="sec" data-i="${i}" title="Section ${l}">${l}</button>`).join("")}</div>
     <span class="sp"></span>
-    <div class="dbpm"><button class="dsq" data-d="bpmDn" aria-label="Slower">−</button><div><b>${S.bpm}</b><small>BPM</small></div><button class="dsq" data-d="bpmUp" aria-label="Faster">+</button><button class="dt" data-d="tap">Tap</button></div>
-    <select id="dkey" aria-label="Key">${NN.map((n,i)=>`<option value="${i}"${i===S.key?" selected":""}>${n} minor</option>`).join("")}</select>
-    <button class="dt" data-d="saveWav">${songOn&&songRec?"Cancel save":"Save WAV"}</button>
-    <button class="dt" data-a="song">Settings &amp; saves</button>`;
-  $("#dproj").innerHTML=`<div class="dph">Sections</div><div class="dpb">
-    ${SL.map((l,i)=>`<div class="pcard${i===S.sel?" on":""}" draggable="true" data-d="selsec" data-drag="${i}" data-i="${i}" style="--sc:${SECCOL[i]}">
-      <div class="pct"><b>${l}</b><span>${hasData(i)?"":"Empty"}</span><button class="dmini" data-d="addclip" data-i="${i}" title="Add to the end of the song">+ Song</button></div>
+    <div class="tgroup"><button class="tbtn sq" data-d="bpmDn" aria-label="Slower">−</button><div class="tbpm"><b>${S.bpm}</b><small>BPM</small></div><button class="tbtn sq" data-d="bpmUp" aria-label="Faster">+</button><button class="tbtn" data-d="tap" title="Tap the tempo">Tap</button></div>
+    <select id="dkey" class="tsel" aria-label="Key">${NN.map((n,i)=>`<option value="${i}"${i===S.key?" selected":""}>${n} minor</option>`).join("")}</select>
+    <button class="tbtn solid" data-d="saveWav">${songOn&&songRec?"Cancel save":"Save WAV"}</button>
+    <button class="tbtn" data-a="song">Saves</button>`);
+  if(setH($("#dproj"),`<div class="dph">Sections</div><div class="dpb">
+    ${SL.map((l,i)=>`<div class="pcard${i===S.sel?" on":""}" draggable="true" data-d="selsec" data-drag="${i}" data-i="${i}" style="--sc:${SECCOL[i]}" title="Drag onto the timeline">
+      <div class="pct"><b>${l}</b><span>${hasData(i)?"":"Empty"}</span><button class="dmini" data-d="addclip" data-i="${i}" title="Add to the end of the song">+ Add</button></div>
       <canvas id="th${i}" class="thumb"></canvas></div>`).join("")}
-    <div class="dgroup"><div class="dgt">Copy section</div><div class="drow"><span>Copy ${SL[S.sel]} to</span><select id="dcopy">${others.map(i=>`<option value="${i}"${i===ui.copyTo?" selected":""}>${SL[i]}</option>`).join("")}</select><button class="dt" data-d="copy">Copy</button></div></div>
-    <p class="dhint">Drag a section onto the timeline to place it in the song.</p></div>`;
-  $("#dinsp").innerHTML=`<div class="dph">Inspector</div><div class="dpb">${inspHTML(li,sc)}</div>`;
-  $("#dvtabs").innerHTML=`<button class="dvt${S.tab==="drums"?" on":""}" style="--lc:${DRUMC}" data-d="tab" data-t="drums">Drums <kbd>1</kbd></button>`+
+    <div class="dgroup flat"><div class="drow"><span>Copy ${SL[S.sel]} to</span><select id="dcopy">${others.map(i=>`<option value="${i}"${i===ui.copyTo?" selected":""}>${SL[i]}</option>`).join("")}</select><button class="dt" data-d="copy">Copy</button></div></div></div>`))canv=true;
+  setH($("#dinsp"),`<div class="dph">Inspector</div><div class="dpb">${inspHTML(li,sc)}</div>`);
+  setH($("#dvtabs"),`<div class="dvseg">`+`<button class="dvt${S.tab==="drums"?" on":""}" style="--lc:${DRUMC}" data-d="tab" data-t="drums">Drums <kbd>1</kbd></button>`+
     LAYERS.map((L0,i)=>`<button class="dvt${S.tab===String(i)?" on":""}${sc.layers[i].muted?" muted":""}" style="--lc:${L0.c}" data-d="tab" data-t="${i}">${L0.n} <kbd>${i+2}</kbd></button>`).join("")+
-    `<span class="dstatus" id="dstatus">${esc($("#status").textContent)}</span><span class="sp"></span><span class="dvsec" style="color:${SECCOL[S.sel]}">Section ${SL[S.sel]}</span>`;
-  const vb=$("#dvbody");
-  if(li<0){vb.innerHTML=`<div class="dvdrums"><div class="dvgridw"><canvas id="dgridD"></canvas></div>
+    `</div><span class="dstatus" id="dstatus"></span><span class="sp"></span><span class="dvsec" style="--sc:${SECCOL[S.sel]}">Section ${SL[S.sel]}</span>`);
+  const ds=$("#dstatus"),st=$("#status");if(ds&&st&&ds.textContent!==st.textContent){ds.textContent=st.textContent;ds.className="dstatus"+(st.classList.contains("rec")?" rec":"")+(st.classList.contains("ok")?" ok":"");}
+  const vb=$("#dvbody");let vh;
+  if(li<0){vh=`<div class="dvdrums"><div class="dvgridw"><canvas id="dgridD"></canvas></div>
       <div class="ddpads">${DROWS.map((r,k)=>`<div class="dpad" style="--dc:${r.c}" data-r="${r.id}" role="button" aria-label="${r.n}"><b>${r.n}</b><small>Key ${DKEYS[k].toUpperCase()}</small></div>`).join("")}</div></div>`;}
   else{const order=[0,1,2,3,4,5,6,7];
-    vb.innerHTML=`<div class="dvsplit" style="--cc:${LAYERS[li].c}"><div class="dvleft"><div class="dvrollw"><canvas id="rollD" aria-label="Note editor"></canvas></div>
+    vh=`<div class="dvsplit" style="--cc:${LAYERS[li].c}"><div class="dvleft"><div class="dvrollw"><canvas id="rollD" aria-label="Note editor"></canvas></div>
       <div class="dnpads">${order.map(i=>`<div class="pad${i===0||i===7?" root":""}" data-i="${i}" role="button" aria-label="Note ${nameOf(li,i)}"><b>${nameOf(li,i)}</b><small>${KEYS[i].toUpperCase()}</small></div>`).join("")}</div></div>
       <div class="dvxy"><canvas id="xyD" aria-label="Wub pad"></canvas></div></div>`;}
-  $("#dtlhead").innerHTML=`<div class="tlh" style="height:${TL.ruler}px">Bars</div><div class="tlh" style="height:${TL.song}px">Song</div><div class="tlh" style="height:${TL.moves}px">Moves</div>`+
-    LANES_A.map(l=>`<div class="tlh" style="height:${TL[l.k]}px;color:${l.c}">${l.n}<button class="dmini" data-d="clearlane" data-k="${l.k}" title="Remove all ${l.n.toLowerCase()} keyframes">Clear</button></div>`).join("");
+  if(setH(vb,vh))canv=true;
+  setH($("#dtlhead"),`<div class="tlh" style="height:${TL.ruler}px">Bars</div><div class="tlh" style="height:${TL.song}px">Song</div><div class="tlh" style="height:${TL.moves}px">Moves</div>`+
+    LANES_A.map(l=>`<div class="tlh two" style="height:${TL[l.k]}px"><div><b style="color:${l.c}">${l.n}</b><small>${l.k==="filter"?"Dark to bright":"Quiet to loud"}</small></div><button class="dmini" data-d="clearlane" data-k="${l.k}" title="Remove all ${l.n.toLowerCase()} keyframes">Clear</button></div>`).join(""));
   sizeTimeline();
-  requestAnimationFrame(fit);
+  if(canv)fit();
 }
 function inspHTML(li,sc){
   let h="";
   if(li<0){
     h+=`<div class="dgroup"><div class="dgt" style="color:${DRUMC}">Drums · Section ${SL[S.sel]}</div>
       <div class="dgt2">Start from</div><div class="dgrid2">${Object.keys(KITS).map(k=>`<button class="dt" data-d="kit" data-k="${k}">${KITS[k].n}</button>`).join("")}</div>
-      <div class="drow"><button class="dt${sc.dmute?" on":""}" data-d="dmute">${sc.dmute?"Muted":"Mute"}</button><button class="dt danger" data-d="dclear">${ui.arm==="d"?"Click again to erase":"Erase drums"}</button></div></div>`;
+      <div class="drow"><button class="dt${sc.dmute?" on":""}" style="--cc:#ff7482" data-d="dmute">${sc.dmute?"Muted":"Mute"}</button><button class="dt danger" data-d="dclear">${ui.arm==="d"?"Click again to erase":"Erase drums"}</button></div></div>`;
   }else{
     const l=lay(li),s=sndOf(li);
     h+=`<div class="dgroup"><div class="dgt" style="color:${LAYERS[li].c}">${LAYERS[li].n} · ${s.n}</div>
       <div class="dgrid2">${soundsFor(li).map(x=>`<button class="dt${l.snd===x.id?" on":""}" style="--cc:${LAYERS[li].c}" data-d="snd" data-s="${x.id}">${x.n}</button>`).join("")}</div>
       <p class="dhint">${s.d}</p>
-      <div class="drow">${li<2?`<button class="dt${l.sub?" on":""}" data-d="lsub">Sub ${l.sub?"on":"off"}</button>`:""}<button class="dt${l.muted?" on":""}" data-d="lmute">${l.muted?"Muted":"Mute"}</button><button class="dt danger" data-d="lclear">${ui.arm===li?"Click again":"Erase"}</button></div></div>`;
+      <div class="drow">${li<2?`<button class="dt${l.sub?" on":""}" data-d="lsub">Sub ${l.sub?"on":"off"}</button>`:""}<button class="dt${l.muted?" on":""}" style="--cc:#ff7482" data-d="lmute">${l.muted?"Muted":"Mute"}</button><button class="dt danger" data-d="lclear">${ui.arm===li?"Click again":"Erase"}</button></div></div>`;
   }
   const P=S.song||[],c=ui.selClip!=null?P[ui.selClip]:null;
   if(c){h+=`<div class="dgroup"><div class="dgt">Clip ${ui.selClip+1} of ${P.length}</div>
@@ -1051,15 +1142,17 @@ function inspHTML(li,sc){
       <div class="dgt2">Ends with</div><div class="dgrid2">${MOVES.map(([k,lb])=>`<button class="dt${c[k]?" mv":""}" data-d="clipfx" data-k="${k}">${lb}</button>`).join("")}</div>
       <div class="drow"><button class="dt" data-d="clipdup" title="Ctrl + D">Duplicate</button><button class="dt danger" data-d="clipdel" title="Delete">Delete clip</button></div></div>`;}
   if(ui.selKey){const k=ui.selKey,ln=LANES_A.find(x=>x.k===k.lane);
-    h+=`<div class="dgroup"><div class="dgt" style="color:${ln.c}">${ln.n} keyframe</div><p class="dhint">Bar ${(k.o.bar+1).toFixed(2)} · ${k.lane==="filter"?fmtHz(autoHz(k.o.v)):Math.round(k.o.v*100)+"%"}</p>
+    h+=`<div class="dgroup"><div class="dgt" style="color:${ln.c}">${ln.n} keyframe</div><p class="dhint">${barBeat(k.o.bar)} · ${k.lane==="filter"?fmtHz(autoHz(k.o.v))+(k.o.v>.9?" (fully open)":k.o.v<.35?" (muffled)":""):Math.round(k.o.v*100)+"%"}</p><p class="dhint">Drag the point to move it. Double-click it to remove it.</p>
       <div class="drow"><button class="dt danger" data-d="keydel">Delete keyframe</button></div></div>`;}
   h+=`<div class="dgroup"><div class="dgt">Mixer · Section ${SL[S.sel]}</div>
-    ${[{n:"Drums",c:DRUMC,m:sc.dmute,v:sc.dvol},...sc.layers.map((l,i)=>({n:LAYERS[i].n,c:LAYERS[i].c,m:l.muted,v:l.vol}))].map((r,i)=>`<div class="dmix"><span style="color:${r.c}">${r.n}</span><button class="dmini${r.m?" on":""}" data-d="mxm" data-i="${i}">M</button><input type="range" id="dmx${i}" min="0" max="1" step="0.01" value="${r.v}" style="--cc:${r.c}" aria-label="${r.n} level"></div>`).join("")}</div>
-  <div class="dgroup"><div class="dgt">Keys</div><p class="dhint">Space: play song from the cursor · Shift + Space: loop section · A to K: notes · Z X C V: drums · 1 to 4: layers · R: record · Delete: remove clip or keyframe · Ctrl + D: duplicate clip</p></div>`;
+    ${[{n:"Drums",c:DRUMC,m:sc.dmute,v:sc.dvol},...sc.layers.map((l,i)=>({n:LAYERS[i].n,c:LAYERS[i].c,m:l.muted,v:l.vol}))].map((r,i)=>`<div class="dmix"><span style="color:${r.c}">${r.n}</span><button class="dmini${r.m?" on":""}" data-d="mxm" data-i="${i}">M</button><input type="range" id="dmx${i}" min="0" max="1" step="0.01" value="${r.v}" style="--cc:${r.c};--p:${Math.round(r.v*100)}%" aria-label="${r.n} level"></div>`).join("")}</div>
+  <details class="dgroup keys"><summary class="dgt">Keyboard shortcuts</summary><p class="dhint">Space: play song from the cursor · Shift + Space: loop section · A to K: notes · Z X C V: drums · 1 to 4: layers · R: record · Delete: remove clip or keyframe · Ctrl + D: duplicate clip · Ctrl + scroll: zoom timeline</p></details>`;
   return h;
 }
+const barBeat=b=>{const n=Math.floor(b+1e-6),q=Math.round((b-n)*4);return "Bar "+(n+1)+(q?", beat "+(q+1):"");};
 const fmtHz=v=>v>=1000?(v/1000).toFixed(1)+" kHz":Math.round(v)+" Hz";
-function sizeTimeline(){const c=$("#tl"),w=$("#dtlscroll");if(!c||!w)return;const bars=songBars();c.style.width=Math.max(w.clientWidth-2,(bars+16)*ui.barPx)+"px";}
+function fitTL(){const c=$("#tl");if(!c)return;const d=Math.min(2,window.devicePixelRatio||1);c.width=Math.max(1,Math.round(c.clientWidth*d));c.height=Math.max(1,Math.round(c.clientHeight*d));cvs.tl=c;ctx.tl=c.getContext("2d");ctx.tl.setTransform(d,0,0,d,0,0);}
+function sizeTimeline(){const c=$("#tl"),w=$("#dtlscroll");if(!c||!w)return;const bars=songBars();const nw=Math.max(w.clientWidth-2,(bars+16)*ui.barPx)+"px";if(c.style.width!==nw){c.style.width=nw;fitTL();}}
 
 // ── Drawing ──
 function drawThumb(i){
@@ -1092,60 +1185,73 @@ function drawDGridD(){
       if(d[r.id][s]){g.save();g.shadowColor=r.c;g.shadowBlur=8;g.fillRect(x+2,y+3,cw-4,rh-6);g.restore();}}});
   const ds=playing&&!countIn&&gstep>0?(gstep-1)%16:-1;if(ds>=0){g.strokeStyle="rgba(255,255,255,.7)";g.lineWidth=2;g.strokeRect(lbw+ds*cw+1,1,cw-2,H-2);}
 }
+function rr(g,x,y,w,h,r){g.beginPath();if(g.roundRect)g.roundRect(x,y,w,h,Math.min(r,w/2,h/2));else g.rect(x,y,w,h);}
 function drawTL(){
   const c=cvs.tl;if(!c)return;const g=ctx.tl,W=c.clientWidth,H=c.clientHeight,bp=ui.barPx,P=S.song||[];
-  g.fillStyle="#0b0d12";g.fillRect(0,0,W,H);
-  [["song","#10131a"],["moves","#0d1016"],["filter","#10131a"],["vol","#0d1016"]].forEach(([k,col])=>{g.fillStyle=col;g.fillRect(0,TLY[k],W,TL[k]);});
-  const bars=Math.ceil(W/bp);
-  for(let b=0;b<=bars;b++){const x=b*bp;g.fillStyle=b%4===0?"#2a3142":"#161a23";g.fillRect(x,TLY.ruler,1,H);
-    if(b%(bp<20?8:bp<34?4:1)===0){g.fillStyle="#aab2c4";g.font="600 12px "+MONO();g.fillText(String(b+1),x+3,18);}}
-  g.fillStyle="#2c3240";[TLY.song,TLY.moves,TLY.filter,TLY.vol].forEach(y=>g.fillRect(0,y,W,1));
+  g.fillStyle="#0e1014";g.fillRect(0,0,W,H);
+  g.fillStyle="#15181e";g.fillRect(0,0,W,TL.ruler);
+  [["moves","#101217"],["vol","#101217"]].forEach(([k,col])=>{g.fillStyle=col;g.fillRect(0,TLY[k],W,TL[k]);});
+  const bars=Math.ceil(W/bp),every=bp<14?8:bp<26?4:bp<48?2:1;
+  for(let b=0;b<=bars;b++){const x=Math.round(b*bp)+.5;
+    g.fillStyle=b%4===0?"rgba(255,255,255,.09)":"rgba(255,255,255,.035)";g.fillRect(x,TL.ruler,1,H);
+    g.fillStyle=b%4===0?"#8e95a5":"#4a5060";g.fillRect(x,b%4===0?TL.ruler-10:TL.ruler-5,1,b%4===0?10:5);
+    if(b%every===0){g.fillStyle=b%4===0?"#d5d9e2":"#8e95a5";g.font="600 12px "+MONO();g.fillText(String(b+1),x+4,17);}}
+  g.fillStyle="rgba(255,255,255,.08)";[TLY.song,TLY.moves,TLY.filter,TLY.vol].forEach(y=>g.fillRect(0,y,W,1));
   // clips
-  let acc=0;P.forEach((p,i)=>{const len=p.loops*S.bars,x=acc*bp,w=len*bp,col=SECCOL[p.sec],sel=ui.selClip===i;
-    g.fillStyle=col+(sel?"55":"30");g.fillRect(x+1,TLY.song+4,w-2,TL.song-8);
-    g.strokeStyle=sel?"#ffffff":col;g.lineWidth=sel?2:1;g.strokeRect(x+1.5,TLY.song+4.5,w-3,TL.song-9);
-    // mini content
+  let acc=0;P.forEach((p,i)=>{const len=p.loops*S.bars,x=acc*bp,w=len*bp,col=SECCOL[p.sec],sel=ui.selClip===i,y=TLY.song+5,h=TL.song-10,hb=19;
+    g.save();rr(g,x+1.5,y,w-3,h,7);g.clip();
+    g.fillStyle=col+(sel?"38":"22");g.fillRect(x,y,w,h);
+    g.fillStyle=col+(sel?"ff":"d0");g.fillRect(x,y,w,hb);
     const sc=S.secs[p.sec],n=L(),sw=Math.max(.5,(S.bars*bp)/n);
-    for(let r=0;r<p.loops;r++)for(let li=0;li<3;li++){const tr=sc.layers[li].track;g.fillStyle=LAYERS[li].c;g.globalAlpha=.55;
-      for(let s=0;s<n;s++){const e=tr[s];if(e&&e.n!=null)g.fillRect(x+(r*S.bars*bp)+s*sw,TLY.song+30+li*9+(7-e.n)*.8,sw,2);}g.globalAlpha=1;}
-    g.fillStyle="#fff";g.font="700 14px "+MONO();g.fillText(SL[p.sec],x+8,TLY.song+22);
-    if(w>70){g.font="600 12px "+SANS();g.fillStyle="#d7dce6";g.fillText(len+" bars",x+26,TLY.song+22);}
-    g.fillStyle="rgba(255,255,255,.35)";g.fillRect(x+w-6,TLY.song+14,3,TL.song-28);
-    // moves
-    const mx=x+w-bp,mv=MOVES.filter(([k])=>p[k]);
-    if(mv.length){g.fillStyle="rgba(255,184,77,.16)";g.fillRect(mx,TLY.moves+3,bp,TL.moves-6);g.fillStyle="#ffb84d";g.font="700 11px "+SANS();
-      const lab=mv.map(([k,l])=>l).join(" + ");const tw=g.measureText(lab).width;g.fillText(lab,Math.max(x+4,x+w-tw-6),TLY.moves+17);}
+    for(let r=0;r<p.loops;r++){g.fillStyle="rgba(255,255,255,.08)";if(r)g.fillRect(x+r*S.bars*bp,y+hb,1,h-hb);
+      for(let li=0;li<3;li++){const tr=sc.layers[li].track;if(sc.layers[li].muted)continue;g.fillStyle=LAYERS[li].c;g.globalAlpha=.7;
+      for(let s=0;s<n;s++){const e=tr[s];if(e&&e.n!=null)g.fillRect(x+(r*S.bars*bp)+s*sw,y+hb+5+li*11+(7-e.n)*.9,sw,2);}g.globalAlpha=1;}}
+    g.fillStyle="#0b0c0f";g.font="700 13px "+MONO();g.fillText(SL[p.sec],x+8,y+14);
+    if(w>74){g.font="600 12px "+SANS();g.fillText(len+" bars",x+24,y+14);}
+    g.restore();
+    rr(g,x+1.5,y,w-3,h,7);g.strokeStyle=sel?"#ffffff":col+"90";g.lineWidth=sel?2:1;g.stroke();
+    if(sel||(tlHover&&tlHover.clip===i)){g.fillStyle="rgba(255,255,255,.7)";rr(g,x+w-8,y+hb+8,3,h-hb-16,2);g.fill();}
+    const mv=MOVES.filter(([k])=>p[k]);
+    if(mv.length){g.font="700 12px "+SANS();const lab=mv.map(([k,l])=>l).join(" + "),tw=g.measureText(lab).width+14,px=Math.max(x+3,x+w-tw-3);
+      g.fillStyle="rgba(255,184,77,.18)";rr(g,px,TLY.moves+4,tw,TL.moves-8,9);g.fill();g.fillStyle="#ffc56b";g.fillText(lab,px+7,TLY.moves+17);}
     acc+=len;});
-  if(!P.length){g.fillStyle="#8c94a8";g.font="600 14px "+SANS();g.fillText("Drag a section here from the left, or click + Song.",12,TLY.song+38);}
-  if(drag&&drag.t==="move"&&drag.moved){g.fillStyle="#fff";g.fillRect(drag.insX-1,TLY.song,3,TL.song);}
-  if(dropX!==null){g.fillStyle="#4dffb8";g.fillRect(dropX-1,TLY.song,3,TL.song);}
-  // song end
-  const endX=acc*bp;g.fillStyle="rgba(255,255,255,.25)";g.fillRect(endX,TLY.ruler,1,H);
+  if(!P.length){g.fillStyle="#8e95a5";g.font="600 14px "+SANS();g.fillText("Drag a section here from the left, or click + Add.",12,TLY.song+37);}
+  if(drag&&drag.t==="move"&&drag.moved){g.fillStyle="#fff";rr(g,drag.insX-1.5,TLY.song+2,3,TL.song-4,2);g.fill();}
+  if(dropX!==null){g.fillStyle="#4dffb8";rr(g,dropX-1.5,TLY.song+2,3,TL.song-4,2);g.fill();}
+  const endX=acc*bp;if(P.length){g.fillStyle="rgba(0,0,0,.28)";g.fillRect(endX,TL.ruler,W-endX,H);g.fillStyle="rgba(255,255,255,.3)";g.fillRect(endX,TL.ruler,1,H);}
   // automation
-  LANES_A.forEach(ln=>{const y0=TLY[ln.k],h=TL[ln.k],arr=S.auto[ln.k]||[];
-    if(!arr.length){g.fillStyle="#6c7488";g.font="600 12px "+SANS();g.fillText("Click to add a keyframe",8,y0+h/2+4);return;}
-    g.strokeStyle=ln.c;g.lineWidth=2;g.beginPath();
-    g.moveTo(0,y0+h-4-arr[0].v*(h-8));arr.forEach(k=>g.lineTo(k.bar*bp,y0+h-4-k.v*(h-8)));g.lineTo(W,y0+h-4-arr[arr.length-1].v*(h-8));g.stroke();
-    arr.forEach(k=>{const x=k.bar*bp,y=y0+h-4-k.v*(h-8),sel=ui.selKey&&ui.selKey.o===k;g.save();g.translate(x,y);g.rotate(Math.PI/4);g.fillStyle=sel?"#ffffff":ln.c;g.fillRect(-5,-5,10,10);g.strokeStyle="#0b0d12";g.lineWidth=1.5;g.strokeRect(-5,-5,10,10);g.restore();});});
+  LANES_A.forEach(ln=>{const y0=TLY[ln.k],h=TL[ln.k],arr=S.auto[ln.k]||[],Y=v=>y0+h-6-v*(h-12);
+    if(!arr.length){g.fillStyle="#7c8394";g.font="500 13px "+SANS();g.fillText(ln.k==="filter"?"Click to add a point. Low is muffled, high is bright.":"Click to add a point. Use it for fade-ins and fade-outs.",10,y0+h/2+5);return;}
+    g.beginPath();g.moveTo(0,Y(arr[0].v));arr.forEach(k=>g.lineTo(k.bar*bp,Y(k.v)));g.lineTo(W,Y(arr[arr.length-1].v));
+    g.lineTo(W,y0+h);g.lineTo(0,y0+h);g.closePath();g.fillStyle=ln.c+"1c";g.fill();
+    g.beginPath();g.moveTo(0,Y(arr[0].v));arr.forEach(k=>g.lineTo(k.bar*bp,Y(k.v)));g.lineTo(W,Y(arr[arr.length-1].v));g.strokeStyle=ln.c;g.lineWidth=2;g.lineJoin="round";g.stroke();
+    arr.forEach(k=>{const x=k.bar*bp,y=Y(k.v),sel=ui.selKey&&ui.selKey.o===k,hov=tlHover&&tlHover.key===k;
+      g.beginPath();g.arc(x,y,sel||hov?6.5:5,0,7);g.fillStyle=sel?"#ffffff":ln.c;g.fill();g.lineWidth=2;g.strokeStyle="#0e1014";g.stroke();
+      if(drag&&drag.t==="key"&&drag.o===k){const lab=(ln.k==="filter"?fmtHz(autoHz(k.v)):Math.round(k.v*100)+"%")+" · "+barBeat(k.bar);g.font="600 12px "+SANS();const tw=g.measureText(lab).width+14,bx=Math.min(W-tw-4,x+10),by=Math.max(y0+2,y-26);
+        g.fillStyle="#f3f4f7";rr(g,bx,by,tw,20,6);g.fill();g.fillStyle="#0b0c0f";g.fillText(lab,bx+7,by+14);}});});
   // cursor + playhead
-  g.fillStyle="#4dffb8";g.fillRect(ui.cursor*bp,0,2,H);g.beginPath();g.moveTo(ui.cursor*bp-6,0);g.lineTo(ui.cursor*bp+8,0);g.lineTo(ui.cursor*bp+1,9);g.fill();
+  const cx=ui.cursor*bp;g.fillStyle="#4dffb8";g.fillRect(cx,TL.ruler,1.5,H);g.beginPath();g.moveTo(cx-6,TL.ruler-11);g.lineTo(cx+7,TL.ruler-11);g.lineTo(cx+.75,TL.ruler);g.closePath();g.fill();
   if(songOn){const x=songPosBar*bp;g.fillStyle="#ffffff";g.fillRect(x,0,2,H);}
 }
 function deskFrame(){
   if(deskDirty)deskRender();
   for(let i=0;i<4;i++)drawThumb(i);
   drawRollD();drawDGridD();drawXY("xyD");drawTL();
-  const el=$("#dtime");if(el){el.textContent=songOn?`Song · bar ${Math.floor(songPosBar)+1} · ${mmss(songPosBar*4*60/S.bpm)}`:playing&&!countIn&&gstep>0?`Section ${SL[S.sel]} · bar ${Math.floor(((gstep-1)%L())/16)+1}`:`Cursor · bar ${ui.cursor+1}`;}
+  const tm=$("#dtime"),ps=$("#dpos");if(!tm||!ps)return;let a,b;
+  if(songOn){a=mmss(songPosBar*240/S.bpm);b=`Bar ${Math.floor(songPosBar)+1} · Part ${sp.i+1} of ${S.song.length}`;}
+  else if(playing&&!countIn&&gstep>0){const bb=Math.floor(((gstep-1)%L())/16)+1;a=SL[S.sel]+" · "+bb+"/"+S.bars;b="Looping section "+SL[S.sel];}
+  else{a=mmss(ui.cursor*240/S.bpm);b=`Start at bar ${ui.cursor+1} · Song ${mmss(songBars()*240/S.bpm)}`;}
+  if(tm.textContent!==a)tm.textContent=a;if(ps.textContent!==b)ps.textContent=b;
 }
 
 // ── Timeline input ──
-let drag=null,dropX=null;
+let drag=null,dropX=null,tlHover=null;
 function tlPos(e){const c=cvs.tl,r=c.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top};}
 function clipAt(x){const P=S.song||[];let acc=0;for(let i=0;i<P.length;i++){const len=P[i].loops*S.bars;if(x>=acc*ui.barPx&&x<(acc+len)*ui.barPx)return{i,x0:acc*ui.barPx,x1:(acc+len)*ui.barPx};acc+=len;}return null;}
 function insertIndexAt(x,skip){const P=S.song||[];let acc=0,idx=0;for(let i=0;i<P.length;i++){const len=P[i].loops*S.bars,mid=(acc+len/2)*ui.barPx;if(i!==skip&&x>mid)idx=i+1;acc+=len;}return idx;}
 function insertX(idx,skip){const P=S.song||[];let acc=0;for(let i=0;i<idx&&i<P.length;i++){if(i===skip)continue;acc+=P[i].loops*S.bars;}return acc*ui.barPx;}
 function laneAt(y){for(const k of ["filter","vol"])if(y>=TLY[k]&&y<TLY[k]+TL[k])return k;if(y<TLY.song)return"ruler";if(y<TLY.moves)return"song";if(y<TLY.filter)return"moves";return null;}
-function keyFromPos(lane,x,y){const h=TL[lane],v=Math.max(0,Math.min(1,(TLY[lane]+h-4-y)/(h-8)));const bar=Math.max(0,Math.round(x/ui.barPx*4)/4);return{bar,v};}
+function keyFromPos(lane,x,y){const h=TL[lane],v=Math.max(0,Math.min(1,(TLY[lane]+h-6-y)/(h-12)));const bar=Math.max(0,Math.round(x/ui.barPx*4)/4);return{bar,v};}
 function bindTimeline(){
   const wrap=$("#dtlscroll");
   wrap.addEventListener("pointerdown",e=>{
@@ -1156,15 +1262,21 @@ function bindTimeline(){
       if(!h){ui.selClip=null;touch();return;}
       ui.selClip=h.i;
       if(lane==="song"&&p.x>h.x1-10)drag={t:"resize",i:h.i,x0:h.x0};
-      else if(lane==="song")drag={t:"move",i:h.i,sx:p.x,moved:false,insX:0};
+      else if(lane==="song"){drag={t:"move",i:h.i,sx:p.x,moved:false,insX:0};e.target.style.cursor="grabbing";}
       if(!playing){S.sel=S.song[h.i].sec;if(A)syncAll();renderTop();}touch();return;}
     // automation lane
-    const arr=S.auto[lane]||(S.auto[lane]=[]),hit=arr.find(k=>Math.abs(k.bar*ui.barPx-p.x)<8&&Math.abs((TLY[lane]+TL[lane]-4-k.v*(TL[lane]-8))-p.y)<8);
+    const arr=S.auto[lane]||(S.auto[lane]=[]),hit=arr.find(k=>Math.abs(k.bar*ui.barPx-p.x)<9&&Math.abs((TLY[lane]+TL[lane]-6-k.v*(TL[lane]-12))-p.y)<9);
     let o=hit;if(!o){o=keyFromPos(lane,p.x,p.y);arr.push(o);arr.sort((a,b)=>a.bar-b.bar);}
     ui.selKey={lane,o};ui.selClip=null;drag={t:"key",lane,o};touch();save();
   });
   wrap.addEventListener("pointermove",e=>{
-    if(!drag||e.target.id!=="tl")return;const p=tlPos(e);
+    if(e.target.id!=="tl")return;
+    if(!drag){const p=tlPos(e),lane=laneAt(p.y),c=e.target;let cur="default",hv=null;
+      if(lane==="ruler")cur="pointer";
+      else if(lane==="song"){const h=clipAt(p.x);if(h){hv={clip:h.i};cur=p.x>h.x1-10?"ew-resize":"grab";}}
+      else if(lane==="filter"||lane==="vol"){const Y=v=>TLY[lane]+TL[lane]-6-v*(TL[lane]-12),k=(S.auto[lane]||[]).find(k=>Math.abs(k.bar*ui.barPx-p.x)<8&&Math.abs(Y(k.v)-p.y)<8);hv=k?{key:k}:null;cur=k?"move":"crosshair";}
+      c.style.cursor=cur;tlHover=hv;return;}
+    const p=tlPos(e);
     if(drag.t==="ruler"){const bar=Math.max(0,Math.floor(p.x/ui.barPx/S.bars)*S.bars);if(bar!==ui.cursor&&!songOn){ui.cursor=bar;}return;}
     if(drag.t==="resize"){const part=S.song[drag.i],loops=Math.max(1,Math.min(lp(64),Math.round((p.x-drag.x0)/(S.bars*ui.barPx))));if(loops!==part.loops){part.loops=loops;sizeTimeline();touch();}return;}
     if(drag.t==="move"){if(Math.abs(p.x-drag.sx)>5)drag.moved=true;if(drag.moved){drag.idx=insertIndexAt(p.x,drag.i);drag.insX=insertX(drag.idx,drag.i);}return;}
@@ -1173,10 +1285,10 @@ function bindTimeline(){
   const up=()=>{if(!drag)return;const d=drag;drag=null;
     if(d.t==="move"&&d.moved&&d.idx!=null){const P=S.song,item=P.splice(d.i,1)[0];let idx=d.idx>d.i?d.idx-1:d.idx;if(idx>P.length)idx=P.length;P.splice(idx,0,item);ui.selClip=idx;}
     save();touch();};
-  wrap.addEventListener("pointerup",up);wrap.addEventListener("pointercancel",up);
+  wrap.addEventListener("pointerup",up);wrap.addEventListener("pointerleave",()=>{tlHover=null;});wrap.addEventListener("pointercancel",up);
   wrap.addEventListener("dblclick",e=>{if(e.target.id!=="tl")return;const p=tlPos(e),lane=laneAt(p.y);if(lane!=="filter"&&lane!=="vol")return;
     const arr=S.auto[lane]||[],i=arr.findIndex(k=>Math.abs(k.bar*ui.barPx-p.x)<8);if(i>=0){arr.splice(i,1);ui.selKey=null;save();touch();}});
-  wrap.addEventListener("wheel",e=>{if(e.ctrlKey||e.metaKey){e.preventDefault();ui.barPx=Math.max(8,Math.min(96,ui.barPx*(e.deltaY<0?1.12:.89)));const z=$("#dzoom");if(z)z.value=ui.barPx;sizeTimeline();requestAnimationFrame(fit);}
+  wrap.addEventListener("wheel",e=>{if(e.ctrlKey||e.metaKey){e.preventDefault();ui.barPx=Math.max(8,Math.min(96,ui.barPx*(e.deltaY<0?1.12:.89)));const z=$("#dzoom");if(z){z.value=ui.barPx;z.style.setProperty("--p",Math.round((ui.barPx-8)/88*100)+"%");}sizeTimeline();fitTL();}
     else if(!e.shiftKey&&Math.abs(e.deltaY)>Math.abs(e.deltaX)){wrap.scrollLeft+=e.deltaY;e.preventDefault();}},{passive:false});
   wrap.addEventListener("dragover",e=>{if(!e.dataTransfer.types.includes("text/wub-sec"))return;e.preventDefault();const p=tlPos(e);dropX=insertX(insertIndexAt(p.x,-1),-1);});
   wrap.addEventListener("dragleave",()=>{dropX=null;});
@@ -1264,8 +1376,8 @@ function bindDesk(){
   const root=$("#desk");
   root.addEventListener("click",e=>{const t=e.target.closest("[data-d]");if(!t)return;deskAct(t.dataset.d,t);});
   root.addEventListener("input",e=>{const t=e.target,v=+t.value,sc=sec();
-    if(/^dmx\d$/.test(t.id)){const i=+t.id.slice(3);if(i===0){sc.dvol=v;if(A)A.dg.gain.rampTo(sc.dmute?0:v,.04);}else{sc.layers[i-1].vol=v;applySound(i-1);}save();}
-    else if(t.id==="dzoom"){ui.barPx=v;sizeTimeline();requestAnimationFrame(fit);}});
+    if(/^dmx\d$/.test(t.id)){t.style.setProperty("--p",Math.round(v*100)+"%");const i=+t.id.slice(3);if(i===0){sc.dvol=v;if(A)A.dg.gain.rampTo(sc.dmute?0:v,.04);}else{sc.layers[i-1].vol=v;applySound(i-1);}save();}
+    else if(t.id==="dzoom"){ui.barPx=v;t.style.setProperty("--p",Math.round((v-8)/88*100)+"%");sizeTimeline();fitTL();}});
   root.addEventListener("change",e=>{if(e.target.id==="dkey"){S.key=+e.target.value;save();touch();renderSurface();}if(e.target.id==="dcopy")ui.copyTo=+e.target.value;});
   root.addEventListener("dragstart",e=>{const c=e.target.closest&&e.target.closest("[data-drag]");if(!c)return;e.dataTransfer.setData("text/wub-sec",c.dataset.drag);e.dataTransfer.effectAllowed="copy";});
   bindTimeline();bindViewer();
