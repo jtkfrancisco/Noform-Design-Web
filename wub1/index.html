@@ -425,29 +425,33 @@ function makeVoice(li,bus,comp){
   const g1=new Tone.Gain(.8),g2=new Tone.Gain(.2);o1.connect(g1);o2.connect(g2);
   const flt=new Tone.Filter({type:"lowpass",frequency:2000,Q:1,rolloff:-24});g1.connect(flt);g2.connect(flt);
   const drv=new Tone.Distortion({distortion:.2,wet:.5,oversample:"2x"});flt.connect(drv);
-  const vca=new Tone.Gain(0);drv.connect(vca);
+  const pres=new Tone.Filter({type:"peaking",frequency:1500,Q:.7,gain:li<2?7:2});drv.connect(pres);
+  const vca=new Tone.Gain(0);pres.connect(vca);
   const am=new Tone.Gain(1);vca.connect(am);
   const pan=new Tone.Panner(0);am.connect(pan);
   const lg=new Tone.Gain(.55);
   if(li===2){const d=new Tone.FeedbackDelay({delayTime:60/S.bpm*0.75,feedback:.38,wet:.35});pan.connect(d);d.connect(lg);V[li].dly=d;}else pan.connect(lg);
-  lg.connect(bus);
+  const duck=new Tone.Gain(1);lg.connect(duck);duck.connect(bus);
   const wob=new Tone.LFO({frequency:4,min:2000,max:2001}).connect(flt.frequency).start();
   const amL=new Tone.LFO({frequency:20,min:1,max:1}).connect(am.gain).start();
   const pit=new Tone.LFO({frequency:4,min:0,max:0}).start();
   const d1=new Tone.Add(0),d2=new Tone.Add(0);pit.connect(d1);pit.connect(d2);d1.connect(o1.detune);d2.connect(o2.detune);
   const panL=new Tone.LFO({frequency:.5,min:0,max:0}).connect(pan.pan).start();
-  const n={o1,o2,g1,g2,flt,drv,vca,am,pan,lg,wob,amL,pit,d1,d2,panL};
-  if(li<2){const sub=new Tone.Oscillator({type:"sine",frequency:55}).start();const svca=new Tone.Gain(0);sub.connect(svca);const sg=new Tone.Gain(.55);svca.connect(sg);sg.connect(comp);Object.assign(n,{sub,svca,sg});}
+  const n={o1,o2,g1,g2,flt,drv,pres,vca,am,pan,lg,duck,wob,amL,pit,d1,d2,panL};
+  if(li<2){const sub=new Tone.Oscillator({type:"sine",frequency:55}).start();const svca=new Tone.Gain(0);sub.connect(svca);const sg=new Tone.Gain(.4);svca.connect(sg);sg.connect(duck);Object.assign(n,{sub,svca,sg});}
   Object.assign(V[li],n);
 }
 async function ensureAudio(){
   if(A){if(Tone.getContext().state!=="running")await Tone.start();return;}
   try{Tone.setContext(new Tone.Context({latencyHint:"interactive",lookAhead:0.06}));}catch(e){}
   await Tone.start();
-  const lim=new Tone.Limiter(-1).toDestination();
+  const lim=new Tone.Limiter(-.8).toDestination();
   const mgate=new Tone.Gain(1).connect(lim);
   const av=new Tone.Gain(1).connect(mgate);
-  const comp=new Tone.Compressor({threshold:-14,ratio:3,attack:.01,release:.15}).connect(av);
+  const clip=new Tone.WaveShaper(x=>Math.tanh(1.5*x)/Math.tanh(1.5),4096).connect(av);
+  const mk=new Tone.Gain(1.5).connect(clip);
+  const eq=new Tone.EQ3({low:-2,mid:1.5,high:3,lowFrequency:140,highFrequency:2800}).connect(mk);
+  const comp=new Tone.Compressor({threshold:-20,ratio:4,attack:.004,release:.12,knee:6}).connect(eq);
   let recDest=null;try{recDest=Tone.getContext().rawContext.createMediaStreamDestination();lim.connect(recDest);}catch(e){}
   const an=new Tone.Analyser("waveform",2048);comp.connect(an);
   const rev=new Tone.Reverb({decay:1.6,wet:.12}).connect(comp);await rev.ready;
@@ -456,15 +460,16 @@ async function ensureAudio(){
   const bus=new Tone.Gain(1).connect(af);
   [0,1,2].forEach(li=>makeVoice(li,bus,comp));
   const dg=new Tone.Gain(.8).connect(bus);
-  const kick=new Tone.MembraneSynth({pitchDecay:.045,octaves:6,envelope:{attack:.001,decay:.4,sustain:0,release:.1}});kick.volume.value=2;kick.connect(dg);
-  const snBP=new Tone.Filter({type:"bandpass",frequency:2200,Q:.8}).connect(dg);
-  const snN=new Tone.NoiseSynth({noise:{type:"white"},envelope:{attack:.001,decay:.18,sustain:0,release:.05}});snN.volume.value=-2;snN.connect(snBP);
-  const snB=new Tone.MembraneSynth({pitchDecay:.02,octaves:2,envelope:{attack:.001,decay:.12,sustain:0,release:.05}});snB.volume.value=-6;snB.connect(dg);
+  const kick=new Tone.MembraneSynth({pitchDecay:.032,octaves:5,envelope:{attack:.001,decay:.3,sustain:0,release:.08}});kick.volume.value=4;kick.connect(dg);
+  const kcHP=new Tone.Filter({type:"highpass",frequency:2500}).connect(dg);const kclick=new Tone.NoiseSynth({noise:{type:"white"},envelope:{attack:.0005,decay:.012,sustain:0,release:.01}});kclick.volume.value=-8;kclick.connect(kcHP);
+  const snBP=new Tone.Filter({type:"bandpass",frequency:1900,Q:.7}).connect(dg);
+  const snN=new Tone.NoiseSynth({noise:{type:"white"},envelope:{attack:.001,decay:.18,sustain:0,release:.05}});snN.volume.value=1;snN.connect(snBP);
+  const snB=new Tone.MembraneSynth({pitchDecay:.02,octaves:2,envelope:{attack:.001,decay:.12,sustain:0,release:.05}});snB.volume.value=-3;snB.connect(dg);
   const hat=new Tone.MetalSynth({envelope:{attack:.001,decay:.05,release:.01},harmonicity:5.1,modulationIndex:32,resonance:5000,octaves:1.5});hat.volume.value=-20;hat.connect(dg);
   const clBP=new Tone.Filter({type:"bandpass",frequency:1300,Q:1.2}).connect(dg);
   const clap=new Tone.NoiseSynth({noise:{type:"pink"},envelope:{attack:.003,decay:.14,sustain:0,release:.05}});clap.volume.value=-4;clap.connect(clBP);
   const riserG=new Tone.Gain(0).connect(rev);const riserF=new Tone.Filter({type:"bandpass",frequency:300,Q:1.4}).connect(riserG);new Tone.Noise("white").start().connect(riserF);
-  A={an,dg,kick,snN,snB,hat,clap,mgate,mf,af,av,recDest,riserG,riserF};
+  A={an,dg,kick,kclick,snN,snB,hat,clap,mgate,mf,af,av,recDest,riserG,riserF};
   syncAll();
   T().scheduleRepeat(tick,"16n",0);
 }
@@ -474,10 +479,10 @@ function applySound(li){
   try{if(s.o1==="fmsine"){v.o1.harmonicity.value=li===2?3.5:1;v.o1.modulationIndex.value=li===2?3:6;}if(s.o2==="fmsine"){v.o2.harmonicity.value=2;v.o2.modulationIndex.value=4;}}catch(e){}
   v.g1.gain.value=1-s.mix;v.g2.gain.value=s.mix;v.d2.addend.value=s.det;
   v.flt.type=s.ft;v.flt.Q.value=s.q;
-  v.drv.distortion=s.drive;v.drv.wet.value=s.drive>0?Math.min(1,.35+s.drive):0;
+  v.drv.distortion=Math.min(.9,s.drive*1.35);v.drv.wet.value=s.drive>0?Math.min(1,.5+s.drive):0;
   v.wob.type=s.lfo||"sine";
   v.lg.gain.rampTo(l.muted?0:l.vol,.04);
-  if(v.sg)v.sg.gain.rampTo(l.muted||!l.sub?0:.55,.04);
+  if(v.sg)v.sg.gain.rampTo(l.muted||!l.sub?0:.4,.04);
   v.panL.frequency.value=S.bpm/60/2;const t=S.tingle*(li===2?.9:.7);v.panL.min=-t;v.panL.max=t;
   if(v.dly)v.dly.delayTime.value=60/S.bpm*.75;
   applyXY(li,l.xy.x,l.xy.y);
@@ -513,7 +518,8 @@ function attack(li,i,time){
 function glide(li,i,time){setFreq(li,i,time,Math.max(.02,sndOf(li).glide));V[li].cur=i;}
 function release(li,time){const r=sndOf(li).e.r;gates(li).forEach(g=>{g.cancelScheduledValues(time);g.setTargetAtTime(0,time,r/3);});V[li].cur=null;}
 function hitDrum(r,time,vel=1){
-  if(r==="k")A.kick.triggerAttackRelease("C1","8n",time,vel);
+  if(r==="k"){A.kick.triggerAttackRelease("F1","8n",time,vel);A.kclick.triggerAttackRelease("64n",time,vel*.8);
+    [0,1].forEach(li=>{const d=V[li].duck;if(!d)return;d.gain.cancelScheduledValues(time);d.gain.setValueAtTime(.25,time);d.gain.linearRampToValueAtTime(1,time+.17);});}
   else if(r==="s"){A.snN.triggerAttackRelease("16n",time,vel);A.snB.triggerAttackRelease("G2","16n",time,vel);}
   else if(r==="h")A.hat.triggerAttackRelease(300,.04,time,vel);
   else A.clap.triggerAttackRelease("16n",time,vel);
