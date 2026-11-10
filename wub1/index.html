@@ -984,7 +984,7 @@ function loadSong(d){
   if(playing)togglePlay();
   queued=null;recMode="off";armed=null;countIn=0;
   if(songOn)finishSong(false);
-  S=Object.assign({},S,d);if(!Array.isArray(S.song))S.song=[];if(!S.auto)S.auto={filter:[],vol:[]};if(!Array.isArray(S.fx))S.fx=[];packFx();S.slot=null;ui.selClip=null;ui.selKey=null;ui.selFx=null;ui.cursor=0;S.example=false;fitTracks();if(A)syncAll();save();
+  S=Object.assign({},S,{fx:[],auto:{filter:[],vol:[]},song:[],name:""},d);if(!Array.isArray(S.song))S.song=[];if(!S.auto)S.auto={filter:[],vol:[]};if(!Array.isArray(S.fx))S.fx=[];packFx();S.slot=null;ui.selClip=null;ui.selKey=null;ui.selFx=null;ui.cursor=0;S.example=false;fitTracks();if(A)syncAll();save();
   renderTop();renderTabs();renderLbar();renderSurface();renderSheet();
 }
 function renderSheet(){
