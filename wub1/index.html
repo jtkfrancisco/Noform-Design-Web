@@ -315,7 +315,6 @@ body.desk .sheet{box-shadow:0 30px 80px rgba(0,0,0,.6)}
 .undoM:disabled{opacity:.35}
 .opennow{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:6px;background:rgba(77,255,184,.16);color:var(--go);font:600 12px var(--sans);vertical-align:1px}
 body.desk #desk{grid-template-rows:64px minmax(0,1fr) 336px}
-#tl{height:282px!important}
 .dbrand{display:none!important}
 .lcd{min-width:200px!important}
 @media (max-width:1400px){#dtool{gap:6px;padding:0 10px}.tbtn{padding:0 9px}.lcd{min-width:150px!important;padding:0 10px}.dnamew{width:150px!important}.tseg{width:30px}}
@@ -985,7 +984,7 @@ function loadSong(d){
   if(playing)togglePlay();
   queued=null;recMode="off";armed=null;countIn=0;
   if(songOn)finishSong(false);
-  S=Object.assign({},S,d);if(!Array.isArray(S.song))S.song=[];if(!S.auto)S.auto={filter:[],vol:[]};if(!Array.isArray(S.fx))S.fx=[];S.slot=null;ui.selClip=null;ui.selKey=null;ui.selFx=null;ui.cursor=0;S.example=false;fitTracks();if(A)syncAll();save();
+  S=Object.assign({},S,d);if(!Array.isArray(S.song))S.song=[];if(!S.auto)S.auto={filter:[],vol:[]};if(!Array.isArray(S.fx))S.fx=[];packFx();S.slot=null;ui.selClip=null;ui.selKey=null;ui.selFx=null;ui.cursor=0;S.example=false;fitTracks();if(A)syncAll();save();
   renderTop();renderTabs();renderLbar();renderSurface();renderSheet();
 }
 function renderSheet(){
@@ -1133,14 +1132,14 @@ const FXSYN={
 };
 function fxNorm(a){let m=0;for(let i=0;i<a.length;i++)m=Math.max(m,Math.abs(a[i]));if(m>0){const k=.9/m;for(let i=0;i<a.length;i++)a[i]*=k;}}
 function fxPeaks(id,a){const n=96,p=new Float32Array(n),step=Math.max(1,Math.floor(a.length/n));for(let i=0;i<n;i++){let m=0;for(let j=i*step;j<Math.min(a.length,(i+1)*step);j++)m=Math.max(m,Math.abs(a[j]));p[i]=m;}FXPEAK[id]=p;}
-let fxReady=null;
+let fxReady=null,fxLoaded=false;
 function loadFx(){if(fxReady)return fxReady;fxReady=(async()=>{
   const OAC=window.OfflineAudioContext||window.webkitOfflineAudioContext;if(!OAC)return;
   await Promise.all(FXP.map(async f=>{try{let data;
     if(f.f){const ab=await (await fetch("sounds/"+f.id+".mp3")).arrayBuffer();const oc=new OAC(1,SR,SR);const b=await oc.decodeAudioData(ab);data=new Float32Array(b.length);b.copyFromChannel?b.copyFromChannel(data,0):data.set(b.getChannelData(0));}
     else{const [d,fn]=FXSYN[f.id];const oc=new OAC(1,Math.ceil(d*SR),SR),o=oc.createGain();o.connect(oc.destination);fn(oc,o);const b=await oc.startRendering();data=b.getChannelData(0).slice();fxNorm(data);}
     FXBUF[f.id]=data;fxPeaks(f.id,data);}catch(e){console.warn("sound",f.id,e);}}));
-  if(typeof touch==="function")touch();})();return fxReady;}
+  fxLoaded=true;if(typeof touch==="function")touch();})();return fxReady;}
 const fxSec=id=>FXBUF[id]?FXBUF[id].length/SR:1;
 const fxBars=f=>fxSec(f.id)/Math.pow(2,(f.pitch||0)/12)*S.bpm/240;
 function fxLive(id){if(FXLIVE[id])return FXLIVE[id];const d=FXBUF[id];if(!d)return null;const raw=Tone.getContext().rawContext,b=raw.createBuffer(1,d.length,SR);b.copyToChannel?b.copyToChannel(d,0):b.getChannelData(0).set(d);return FXLIVE[id]=new Tone.ToneAudioBuffer(b);}
@@ -1153,6 +1152,12 @@ function fxTick(pos,time){const F=S.fx;if(!F||!F.length)return;const spb=240/S.b
 const KEYS="asdfghjk",DKEYS="zxcv";
 const TL={ruler:28,song:64,fx:40,moves:26,filter:62,vol:62};
 const TLY={ruler:0,song:28,fx:92,moves:132,filter:158,vol:220,end:282};
+const FXROW=30,FXMAXR=4;
+function fxEnd(f){return f.bar+fxBars(f);}
+function freeRow(bar,len,skip){const F=S.fx||[];for(let r=0;r<FXMAXR;r++){if(!F.some(o=>o!==skip&&o.row!=null&&o.row===r&&o.bar<bar+len&&fxEnd(o)>bar))return r;}return FXMAXR-1;}
+function packFx(force){const F=S.fx||[];if(!fxLoaded)return;if(!force&&!F.some(f=>f.row==null))return;const sorted=F.slice().sort((a,b)=>a.bar-b.bar);sorted.forEach(f=>{f.row=null;});sorted.forEach(f=>{f.row=freeRow(f.bar,fxBars(f),f);});}
+function fxRows(){const F=S.fx||[];if(!F.length)return 1;let m=0;F.forEach(f=>m=Math.max(m,f.row||0));return Math.min(FXMAXR,m+2);}
+function relayoutTL(){TL.fx=fxRows()*FXROW+8;let y=0;for(const k of ["ruler","song","fx","moves","filter","vol"]){TLY[k]=y;y+=TL[k];}TLY.end=y;}
 const LANES_A=[{k:"filter",n:"Filter",c:"#5ad0ff"},{k:"vol",n:"Volume",c:"#ffb84d"}];
 function setDesk(on){isDesk=on;document.body.classList.toggle("desk",on);releaseAllLive();deskDirty=true;if(!on){renderAll();}requestAnimationFrame(fit);}
 function touch(){deskDirty=true;}
@@ -1172,7 +1177,7 @@ function seekSong(bar){ui.cursor=Math.max(0,bar);if(songOn&&!songRec){finishSong
 // ── Render ──
 function setH(el,h){if(!el)return false;if(el._h===h)return false;el._h=h;el.innerHTML=h;return true;}
 function deskRender(){
-  deskDirty=false;
+  deskDirty=false;packFx();relayoutTL();
   const li=tabLi(),sc=sec(),busy=recMode!=="off"||armed||countIn,live=recMode==="drums"||recMode==="rec";
   const recTxt=live?"● Recording":busy&&!(armed&&armed.mode==="moves")&&recMode!=="moves"?"Cancel":"● Rec";
   const others=[0,1,2,3].filter(i=>i!==S.sel);if(!others.includes(ui.copyTo))ui.copyTo=others[0];
@@ -1216,7 +1221,7 @@ function deskRender(){
       <div class="dnpads">${order.map(i=>`<div class="pad${i===0||i===7?" root":""}" data-i="${i}" role="button" aria-label="Note ${nameOf(li,i)}"><b>${nameOf(li,i)}</b><small>${KEYS[i].toUpperCase()}</small></div>`).join("")}</div></div>
       <div class="dvxy"><canvas id="xyD" aria-label="Wub pad"></canvas></div></div>`;}
   if(setH(vb,vh))canv=true;
-  setH($("#dtlhead"),`<div class="tlh" style="height:${TL.ruler}px">Bars</div><div class="tlh" style="height:${TL.song}px">Song</div><div class="tlh two" style="height:${TL.fx}px"><div><b style="color:#c99bff">Sounds</b><small>Drag from Sounds</small></div></div><div class="tlh" style="height:${TL.moves}px">Moves</div>`+
+  setH($("#dtlhead"),`<div class="tlh" style="height:${TL.ruler}px">Bars</div><div class="tlh" style="height:${TL.song}px">Song</div><div class="tlh two" style="height:${TL.fx}px"><div><b style="color:#c99bff">Sounds</b><small>${(S.fx||[]).length?(S.fx.length+" placed"):"Drag from Sounds"}</small></div></div><div class="tlh" style="height:${TL.moves}px">Moves</div>`+
     LANES_A.map(l=>`<div class="tlh two" style="height:${TL[l.k]}px"><div><b style="color:${l.c}">${l.n}</b><small>${l.k==="filter"?"Dark to bright":"Quiet to loud"}</small></div><button class="dmini" data-d="clearlane" data-k="${l.k}" title="Remove all ${l.n.toLowerCase()} keyframes">Clear</button></div>`).join(""));
   sizeTimeline();
   if(canv)fit();
@@ -1258,7 +1263,7 @@ function inspHTML(li,sc){
 const barBeat=b=>{const n=Math.floor(b+1e-6),q=Math.round((b-n)*4);return "Bar "+(n+1)+(q?", beat "+(q+1):"");};
 const fmtHz=v=>v>=1000?(v/1000).toFixed(1)+" kHz":Math.round(v)+" Hz";
 function fitTL(){const c=$("#tl");if(!c)return;const d=Math.min(2,window.devicePixelRatio||1);c.width=Math.max(1,Math.round(c.clientWidth*d));c.height=Math.max(1,Math.round(c.clientHeight*d));cvs.tl=c;ctx.tl=c.getContext("2d");ctx.tl.setTransform(d,0,0,d,0,0);}
-function sizeTimeline(){const c=$("#tl"),w=$("#dtlscroll");if(!c||!w)return;const bars=songBars();const nw=Math.max(w.clientWidth-2,(bars+16)*ui.barPx)+"px";if(c.style.width!==nw){c.style.width=nw;fitTL();}}
+function sizeTimeline(){relayoutTL();const c=$("#tl"),w=$("#dtlscroll");if(!c||!w)return;const bars=songBars();const nw=Math.max(w.clientWidth-2,(bars+16)*ui.barPx)+"px",nh=TLY.end+"px";let ch=false;if(c.style.width!==nw){c.style.width=nw;ch=true;}if(c.style.height!==nh){c.style.height=nh;ch=true;const d=$("#desk");if(d)d.style.gridTemplateRows="64px minmax(0,1fr) "+(TLY.end+54)+"px";}if(ch){fitTL();requestAnimationFrame(fit);}}
 
 // ── Drawing ──
 function drawThumb(i){
@@ -1322,17 +1327,17 @@ function drawTL(){
       g.fillStyle="rgba(255,184,77,.18)";rr(g,px,TLY.moves+4,tw,TL.moves-8,9);g.fill();g.fillStyle="#ffc56b";g.fillText(lab,px+7,TLY.moves+17);}
     acc+=len;});
   if(!P.length){g.fillStyle="#8e95a5";g.font="600 14px "+SANS();g.fillText("Drag a section here from the left, or click + Add.",12,TLY.song+37);}
-  g.fillStyle="rgba(201,155,255,.04)";g.fillRect(0,TLY.fx,W,TL.fx);
+  g.fillStyle="rgba(201,155,255,.04)";g.fillRect(0,TLY.fx,W,TL.fx);const NR=fxRows();g.fillStyle="rgba(255,255,255,.035)";for(let r=1;r<NR;r++)g.fillRect(0,TLY.fx+4+r*FXROW-1,W,1);
   const F=S.fx||[];if(!F.length&&dropFx===null){g.fillStyle="#7c8394";g.font="500 13px "+SANS();g.fillText("Drag sounds here from Sounds in the left panel.",10,TLY.fx+25);}
   const FS=F.slice().sort((a,b)=>a.bar-b.bar);
-  F.forEach(f=>{const nx=FS.find(o=>o!==f&&o.bar>f.bar),x=f.bar*bp,w=Math.max(10,fxBars(f)*bp),room=(nx?nx.bar*bp:1e9)-(x+w)-8,y=TLY.fx+5,h=TL.fx-10,col=fxCol(f.id),sel=ui.selFx===f,pk=FXPEAK[f.id];
+  F.forEach(f=>{const rw=f.row||0,nx=FS.find(o=>o!==f&&(o.row||0)===rw&&o.bar>f.bar),x=f.bar*bp,w=Math.max(10,fxBars(f)*bp),room=(nx?nx.bar*bp:1e9)-(x+w)-8,y=TLY.fx+5+rw*FXROW,h=FXROW-4,col=fxCol(f.id),sel=ui.selFx===f,pk=FXPEAK[f.id];
     g.save();rr(g,x,y,w,h,6);g.clip();g.fillStyle=col+(sel?"40":"26");g.fillRect(x,y,w,h);
     if(pk){g.fillStyle=col+"aa";const n=pk.length,bw=w/n;for(let i=0;i<n;i++){const a=pk[i]*(h-4)/2;g.fillRect(x+i*bw,y+h/2-a,Math.max(1,bw-.3),a*2);}}
     const fb=fxById(f.id),lab=fb?fb.n:f.id;g.font="700 12px "+SANS();const tw=g.measureText(lab).width;g.restore();
     rr(g,x,y,w,h,6);g.strokeStyle=sel?"#fff":col;g.lineWidth=sel?2:1;g.stroke();
-    if(tw+12<w){g.save();rr(g,x,y,w,h,6);g.clip();g.fillStyle="#f3f4f7";g.fillText(lab,x+6,y+15);g.restore();}
-    else if(tw<=room||sel){g.fillStyle=sel?"#ffffff":"#d5d9e2";g.fillText(lab,x+w+5,y+19);}});
-  if(dropFx!==null){g.fillStyle="#c99bff";rr(g,dropFx*bp-1.5,TLY.fx+2,3,TL.fx-4,2);g.fill();}
+    if(tw+12<w){g.save();rr(g,x,y,w,h,6);g.clip();g.fillStyle="#f3f4f7";g.fillText(lab,x+6,y+17);g.restore();}
+    else if(tw<=room||sel){g.fillStyle=sel?"#ffffff":"#d5d9e2";g.fillText(lab,x+w+5,y+17);}});
+  if(dropFx!==null){g.fillStyle="#c99bff";rr(g,dropFx*bp-1.5,TLY.fx+4+dropFxRow*FXROW,3,FXROW-2,2);g.fill();}
   if(drag&&drag.t==="move"&&drag.moved){g.fillStyle="#fff";rr(g,drag.insX-1.5,TLY.song+2,3,TL.song-4,2);g.fill();}
   if(dropX!==null){g.fillStyle="#4dffb8";rr(g,dropX-1.5,TLY.song+2,3,TL.song-4,2);g.fill();}
   const endX=acc*bp;if(P.length){g.fillStyle="rgba(0,0,0,.28)";g.fillRect(endX,TL.ruler,W-endX,H);g.fillStyle="rgba(255,255,255,.3)";g.fillRect(endX,TL.ruler,1,H);}
@@ -1362,13 +1367,14 @@ function deskFrame(){
 }
 
 // ── Timeline input ──
-let drag=null,dropX=null,dropFx=null,tlHover=null;
+let drag=null,dropX=null,dropFx=null,dropFxRow=0,tlHover=null;
 function tlPos(e){const c=cvs.tl,r=c.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top};}
 function clipAt(x){const P=S.song||[];let acc=0;for(let i=0;i<P.length;i++){const len=P[i].loops*S.bars;if(x>=acc*ui.barPx&&x<(acc+len)*ui.barPx)return{i,x0:acc*ui.barPx,x1:(acc+len)*ui.barPx};acc+=len;}return null;}
 function insertIndexAt(x,skip){const P=S.song||[];let acc=0,idx=0;for(let i=0;i<P.length;i++){const len=P[i].loops*S.bars,mid=(acc+len/2)*ui.barPx;if(i!==skip&&x>mid)idx=i+1;acc+=len;}return idx;}
 function insertX(idx,skip){const P=S.song||[];let acc=0;for(let i=0;i<idx&&i<P.length;i++){if(i===skip)continue;acc+=P[i].loops*S.bars;}return acc*ui.barPx;}
 function laneAt(y){for(const k of ["filter","vol"])if(y>=TLY[k]&&y<TLY[k]+TL[k])return k;if(y<TLY.song)return"ruler";if(y<TLY.fx)return"song";if(y<TLY.moves)return"fx";if(y<TLY.filter)return"moves";return null;}
-function fxAt(x){const F=S.fx||[];for(let i=F.length-1;i>=0;i--){const f=F[i],x0=f.bar*ui.barPx,x1=x0+Math.max(10,fxBars(f)*ui.barPx);if(x>=x0&&x<=x1)return f;}return null;}
+const fxRowAt=y=>Math.max(0,Math.min(FXMAXR-1,Math.floor((y-TLY.fx-4)/FXROW)));
+function fxAt(x,y){const F=S.fx||[],r=fxRowAt(y);for(let i=F.length-1;i>=0;i--){const f=F[i];if((f.row||0)!==r)continue;const x0=f.bar*ui.barPx,x1=x0+Math.max(10,fxBars(f)*ui.barPx);if(x>=x0&&x<=x1)return f;}return null;}
 const snapQ=b=>Math.max(0,Math.round(b*4)/4);
 function keyFromPos(lane,x,y){const h=TL[lane],v=Math.max(0,Math.min(1,(TLY[lane]+h-6-y)/(h-12)));const bar=Math.max(0,Math.round(x/ui.barPx*4)/4);return{bar,v};}
 function bindTimeline(){
@@ -1377,7 +1383,7 @@ function bindTimeline(){
     if(e.target.id!=="tl")return;e.preventDefault();const p=tlPos(e),lane=laneAt(p.y);if(!lane)return;
     try{e.target.setPointerCapture(e.pointerId);}catch(x){}
     if(lane==="ruler"){const bar=Math.max(0,Math.floor(p.x/ui.barPx/S.bars)*S.bars);seekSong(bar);drag={t:"ruler"};return;}
-    if(lane==="fx"){const f=fxAt(p.x);ui.selKey=null;ui.selClip=null;ui.selFx=f;if(f){drag={t:"fx",o:f,dx:p.x-f.bar*ui.barPx,moved:false};e.target.style.cursor="grabbing";}touch();return;}
+    if(lane==="fx"){const f=fxAt(p.x,p.y);ui.selKey=null;ui.selClip=null;ui.selFx=f;if(f){drag={t:"fx",o:f,dx:p.x-f.bar*ui.barPx,moved:false};e.target.style.cursor="grabbing";}touch();return;}
     if(lane==="song"||lane==="moves"){const h=clipAt(p.x);ui.selKey=null;ui.selFx=null;
       if(!h){ui.selClip=null;touch();return;}
       ui.selClip=h.i;
@@ -1394,14 +1400,14 @@ function bindTimeline(){
     if(!drag){const p=tlPos(e),lane=laneAt(p.y),c=e.target;let cur="default",hv=null;
       if(lane==="ruler")cur="pointer";
       else if(lane==="song"){const h=clipAt(p.x);if(h){hv={clip:h.i};cur=p.x>h.x1-10?"ew-resize":"grab";}}
-      else if(lane==="fx"){cur=fxAt(p.x)?"grab":"default";}
+      else if(lane==="fx"){cur=fxAt(p.x,p.y)?"grab":"default";}
       else if(lane==="filter"||lane==="vol"){const Y=v=>TLY[lane]+TL[lane]-6-v*(TL[lane]-12),k=(S.auto[lane]||[]).find(k=>Math.abs(k.bar*ui.barPx-p.x)<8&&Math.abs(Y(k.v)-p.y)<8);hv=k?{key:k}:null;cur=k?"move":"crosshair";}
       c.style.cursor=cur;tlHover=hv;return;}
     const p=tlPos(e);
     if(drag.t==="ruler"){const bar=Math.max(0,Math.floor(p.x/ui.barPx/S.bars)*S.bars);if(bar!==ui.cursor&&!songOn){ui.cursor=bar;}return;}
     if(drag.t==="resize"){const part=S.song[drag.i],loops=Math.max(1,Math.min(lp(64),Math.round((p.x-drag.x0)/(S.bars*ui.barPx))));if(loops!==part.loops){part.loops=loops;sizeTimeline();touch();}return;}
     if(drag.t==="move"){if(Math.abs(p.x-drag.sx)>5)drag.moved=true;if(drag.moved){drag.idx=insertIndexAt(p.x,drag.i);drag.insX=insertX(drag.idx,drag.i);}return;}
-    if(drag.t==="fx"){const nb=snapQ((p.x-drag.dx)/ui.barPx);if(nb!==drag.o.bar){drag.o.bar=nb;drag.moved=true;touch();}return;}
+    if(drag.t==="fx"){const nb=snapQ((p.x-drag.dx)/ui.barPx),nr=fxRowAt(p.y);if(nb!==drag.o.bar||nr!==(drag.o.row||0)){drag.o.bar=nb;drag.o.row=nr;drag.moved=true;touch();}return;}
     if(drag.t==="key"){const n=keyFromPos(drag.lane,p.x,p.y);drag.o.bar=n.bar;drag.o.v=n.v;S.auto[drag.lane].sort((a,b)=>a.bar-b.bar);touch();}
   });
   const up=()=>{if(!drag)return;const d=drag;drag=null;
@@ -1409,14 +1415,14 @@ function bindTimeline(){
     save();touch();};
   wrap.addEventListener("pointerup",up);wrap.addEventListener("pointerleave",()=>{tlHover=null;});wrap.addEventListener("pointercancel",up);
   wrap.addEventListener("dblclick",e=>{if(e.target.id!=="tl")return;const p=tlPos(e),lane=laneAt(p.y);
-    if(lane==="fx"){const f=fxAt(p.x);if(f){S.fx.splice(S.fx.indexOf(f),1);ui.selFx=null;save();touch();}return;}
+    if(lane==="fx"){const f=fxAt(p.x,p.y);if(f){S.fx.splice(S.fx.indexOf(f),1);ui.selFx=null;save();touch();}return;}
     if(lane!=="filter"&&lane!=="vol")return;
     const arr=S.auto[lane]||[],i=arr.findIndex(k=>Math.abs(k.bar*ui.barPx-p.x)<8);if(i>=0){arr.splice(i,1);ui.selKey=null;save();touch();}});
   wrap.addEventListener("wheel",e=>{if(e.ctrlKey||e.metaKey){e.preventDefault();ui.barPx=Math.max(8,Math.min(96,ui.barPx*(e.deltaY<0?1.12:.89)));const z=$("#dzoom");if(z){z.value=ui.barPx;z.style.setProperty("--p",Math.round((ui.barPx-8)/88*100)+"%");}sizeTimeline();fitTL();}
     else if(!e.shiftKey&&Math.abs(e.deltaY)>Math.abs(e.deltaX)){wrap.scrollLeft+=e.deltaY;e.preventDefault();}},{passive:false});
-  wrap.addEventListener("dragover",e=>{if(e.dataTransfer.types.includes("text/wub-fx")){e.preventDefault();dropFx=snapQ(tlPos(e).x/ui.barPx);return;}if(!e.dataTransfer.types.includes("text/wub-sec"))return;e.preventDefault();const p=tlPos(e);dropX=insertX(insertIndexAt(p.x,-1),-1);});
+  wrap.addEventListener("dragover",e=>{if(e.dataTransfer.types.includes("text/wub-fx")){e.preventDefault();const pp=tlPos(e);dropFx=snapQ(pp.x/ui.barPx);dropFxRow=laneAt(pp.y)==="fx"?fxRowAt(pp.y):0;return;}if(!e.dataTransfer.types.includes("text/wub-sec"))return;e.preventDefault();const p=tlPos(e);dropX=insertX(insertIndexAt(p.x,-1),-1);});
   wrap.addEventListener("dragleave",()=>{dropX=null;dropFx=null;});
-  wrap.addEventListener("drop",e=>{const fid=e.dataTransfer.getData("text/wub-fx");if(fid){e.preventDefault();const o={id:fid,bar:snapQ(tlPos(e).x/ui.barPx),vol:1,pitch:0};S.fx.push(o);ui.selFx=o;ui.selClip=null;ui.selKey=null;dropFx=null;loadFx();save();touch();return;}
+  wrap.addEventListener("drop",e=>{const fid=e.dataTransfer.getData("text/wub-fx");if(fid){e.preventDefault();const pp=tlPos(e),o={id:fid,bar:snapQ(pp.x/ui.barPx),vol:1,pitch:0,row:null};const want=laneAt(pp.y)==="fx"?fxRowAt(pp.y):0,len=fxBars(o);o.row=!S.fx.some(q=>q.row===want&&q.bar<o.bar+len&&fxEnd(q)>o.bar)?want:freeRow(o.bar,len,o);S.fx.push(o);ui.selFx=o;ui.selClip=null;ui.selKey=null;dropFx=null;loadFx();save();touch();return;}
     const s=e.dataTransfer.getData("text/wub-sec");dropX=null;if(s==="")return;e.preventDefault();const p=tlPos(e),idx=insertIndexAt(p.x,-1);S.song.splice(idx,0,newPart(+s));ui.selClip=idx;save();touch();});
 }
 
@@ -1495,7 +1501,7 @@ async function deskAct(a,t){
     case"fxprev":if(ui.selFx)previewFx(ui.selFx.id,ui.selFx);return;
     case"fxpitch":if(ui.selFx){ui.selFx.pitch=Math.max(-12,Math.min(12,(ui.selFx.pitch||0)+(+t.dataset.v)));}break;
     case"fxdel":if(ui.selFx){S.fx.splice(S.fx.indexOf(ui.selFx),1);ui.selFx=null;}break;
-    case"fxdup":if(ui.selFx){const o=Object.assign({},ui.selFx,{bar:ui.selFx.bar+Math.ceil(fxBars(ui.selFx)*4)/4});S.fx.push(o);ui.selFx=o;}break;
+    case"fxdup":if(ui.selFx){const o=Object.assign({},ui.selFx,{bar:ui.selFx.bar+Math.ceil(fxBars(ui.selFx)*4)/4,row:null});o.row=freeRow(o.bar,fxBars(o),o);S.fx.push(o);ui.selFx=o;}break;
     case"keydel":if(ui.selKey){const arr=S.auto[ui.selKey.lane],i=arr.indexOf(ui.selKey.o);if(i>=0)arr.splice(i,1);ui.selKey=null;}break;
     case"clearlane":S.auto[t.dataset.k]=[];if(ui.selKey&&ui.selKey.lane===t.dataset.k)ui.selKey=null;break;
     default:return;
