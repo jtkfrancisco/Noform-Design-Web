@@ -331,6 +331,10 @@ body.desk #desk{grid-template-rows:64px minmax(0,1fr) 336px}
 .fxchip:hover{background:var(--d3)}.fxchip:active{cursor:grabbing}
 .fxchip b{font:600 14px var(--sans);color:var(--t1);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .fxchip small{font:600 12px var(--mono);color:var(--t3);flex:none}
+.dfxr{display:grid;grid-template-columns:70px minmax(0,1fr) 64px;gap:8px;align-items:center}
+.dfl{font:600 13px var(--sans);color:var(--t2);min-width:62px}
+.dfv{font:600 12px var(--mono);color:var(--t2);text-align:right;white-space:nowrap}
+.dfxsel{width:100%;height:38px;border-radius:9px;border:1px solid var(--hair);background:var(--d2);color:var(--t1);font:600 14px var(--sans);padding:0 10px}
 @media (max-width:370px){.tb{padding:0 7px;font-size:14px}.tb.play{min-width:58px}.tb.rec{min-width:52px}.sec{font-size:15px}.pad b{font-size:17px}.tab b{font-size:14px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -904,7 +908,7 @@ function songTick(time,s){
   return false;
 }
 async function startSong(record,fromBar){
-  await loadFx();
+  await loadFx();try{await ensureAudio();await ensureFxFx();}catch(e){}
   if(!S.song||!S.song.length){setStatus("Add a part first.",true);return;}
   try{await ensureAudio();}catch(e){return showErr(e);}
   if(playing)await togglePlay();
@@ -1141,12 +1145,31 @@ function loadFx(){if(fxReady)return fxReady;fxReady=(async()=>{
     FXBUF[f.id]=data;fxPeaks(f.id,data);}catch(e){console.warn("sound",f.id,e);}}));
   fxLoaded=true;if(typeof touch==="function")touch();})();return fxReady;}
 const fxSec=id=>FXBUF[id]?FXBUF[id].length/SR:1;
-const fxBars=f=>fxSec(f.id)/Math.pow(2,(f.pitch||0)/12)*S.bpm/240;
-function fxLive(id){if(FXLIVE[id])return FXLIVE[id];const d=FXBUF[id];if(!d)return null;const raw=Tone.getContext().rawContext,b=raw.createBuffer(1,d.length,SR);b.copyToChannel?b.copyToChannel(d,0):b.getChannelData(0).set(d);return FXLIVE[id]=new Tone.ToneAudioBuffer(b);}
-function playFx(id,time,o){if(!A||!A.fxBus)return;const b=fxLive(id);if(!b)return;
-  const p=new Tone.Player(b),g=new Tone.Gain(o&&o.vol!=null?o.vol:1);p.connect(g);g.connect(A.fxBus);p.playbackRate=Math.pow(2,((o&&o.pitch)||0)/12);
-  p.onstop=()=>setTimeout(()=>{try{p.dispose();g.dispose();}catch(e){}},200);p.start(time);}
-async function previewFx(id,o){await ensureAudio();await loadFx();playFx(id,Tone.now()+.02,o);}
+const fxRate=f=>Math.pow(2,(f.pitch||0)/12);
+const fxLenSrc=f=>{const d=fxSec(f.id);return Math.max(.05,d-Math.min(f.ts||0,d-.05)-(f.te||0));};
+const stutReps=st=>st===32?8:4;
+const fxBars=f=>fxLenSrc(f)/fxRate(f)*S.bpm/240+(f.stut?(stutReps(f.stut)-1)/f.stut:0);
+function fxLive(id,rev){const k=id+(rev?"~r":"");if(FXLIVE[k])return FXLIVE[k];const d0=FXBUF[id];if(!d0)return null;const d=rev?d0.slice().reverse():d0;
+  const raw=Tone.getContext().rawContext,b=raw.createBuffer(1,d.length,SR);b.copyToChannel?b.copyToChannel(d,0):b.getChannelData(0).set(d);return FXLIVE[k]=new Tone.ToneAudioBuffer(b);}
+let fxVerbNode=null;
+async function ensureFxFx(){if(!A||fxVerbNode)return;const v=new Tone.Reverb({decay:3.4,preDelay:.02,wet:1});await v.ready;v.connect(A.fxBus);fxVerbNode=v;}
+function playFx(id,time,o){if(!A||!A.fxBus)return;o=o||{};const b=fxLive(id,o.rev);if(!b)return;
+  const rate=fxRate(o),dur=b.duration,ts=Math.min(o.ts||0,dur-.05),te=Math.min(o.te||0,dur-ts-.05),len=dur-ts-te,off=o.rev?te:ts;
+  const nodes=[],g=new Tone.Gain(o.vol!=null?o.vol:1);nodes.push(g);let tail=.3;
+  const tone=o.tone||0;let dry=g;
+  if(Math.abs(tone)>.02){const fl=tone<0?new Tone.Filter({type:"lowpass",frequency:18000*Math.pow(200/18000,-tone),Q:.9}):new Tone.Filter({type:"highpass",frequency:30*Math.pow(1800/30,tone),Q:1.2});g.connect(fl);dry=fl;nodes.push(fl);}
+  dry.connect(A.fxBus);
+  if(o.echo>.01){const dl=new Tone.FeedbackDelay({delayTime:60/S.bpm*.75,feedback:.3+o.echo*.35,wet:1}),eg=new Tone.Gain(o.echo*.8);dry.connect(eg);eg.connect(dl);dl.connect(A.fxBus);nodes.push(dl,eg);tail=4;}
+  if(o.verb>.01&&fxVerbNode){const rg=new Tone.Gain(o.verb*1.2);dry.connect(rg);rg.connect(fxVerbNode);nodes.push(rg);tail=Math.max(tail,4);}
+  const players=[];const mk=()=>{const p=new Tone.Player(b);p.playbackRate=rate;p.connect(g);players.push(p);return p;};
+  let t0=time,srcOff=off,srcLen=len;
+  if(o.stut){const slice=240/S.bpm/o.stut,reps=stutReps(o.stut),sl=Math.min(slice*rate,len);
+    for(let k=0;k<reps;k++){const p=mk();p.fadeIn=.003;p.fadeOut=.004;p.start(t0+k*slice,off,sl);}
+    t0+=reps*slice;srcOff=off+sl;srcLen=Math.max(0,len-sl);}
+  if(srcLen>.01){const p=mk();p.fadeIn=Math.min(o.fi||0,srcLen/rate);p.fadeOut=Math.min(o.fo||0,srcLen/rate);p.start(t0,srcOff,srcLen);}
+  const total=(t0-time)+srcLen/rate+tail+.5;
+  setTimeout(()=>{players.forEach(p=>{try{p.dispose();}catch(e){}});nodes.forEach(n=>{try{n.dispose();}catch(e){}});},(time-Tone.now()+total)*1000);}
+async function previewFx(id,o){await ensureAudio();await loadFx();await ensureFxFx();playFx(id,Tone.now()+.03,o);}
 function fxTick(pos,time){const F=S.fx;if(!F||!F.length)return;const spb=240/S.bpm;for(const f of F)if(f.bar>=pos-1e-6&&f.bar<pos+1/16-1e-6)playFx(f.id,time+Math.max(0,f.bar-pos)*spb,f);}
 
 const KEYS="asdfghjk",DKEYS="zxcv";
@@ -1175,6 +1198,10 @@ function resetAuto(time){if(!A)return;A.af.frequency.cancelScheduledValues(time)
 function seekSong(bar){ui.cursor=Math.max(0,bar);if(songOn&&!songRec){finishSong(false).then(()=>startSong(false,ui.cursor));}touch();}
 
 // ── Render ──
+let sliding=false;
+document.addEventListener("pointerdown",e=>{if(e.target&&e.target.type==="range")sliding=true;},true);
+document.addEventListener("pointerup",()=>{if(sliding){sliding=false;deskDirty=true;}},true);
+document.addEventListener("pointercancel",()=>{if(sliding){sliding=false;deskDirty=true;}},true);
 function setH(el,h){if(!el)return false;if(el._h===h)return false;el._h=h;el.innerHTML=h;return true;}
 function deskRender(){
   deskDirty=false;packFx();relayoutTL();
@@ -1208,7 +1235,7 @@ function deskRender(){
       <div class="pct"><b>${l}</b><span>${hasData(i)?"":"Empty"}</span><button class="dmini" data-d="addclip" data-i="${i}" title="Add to the end of the song">+ Add</button></div>
       <canvas id="th${i}" class="thumb"></canvas></div>`).join("")}
     <div class="dgroup flat"><div class="drow"><span>Copy ${SL[S.sel]} to</span><select id="dcopy">${others.map(i=>`<option value="${i}"${i===ui.copyTo?" selected":""}>${SL[i]}</option>`).join("")}</select><button class="dt" data-d="copy">Copy</button></div></div></div>`))canv=true;
-  setH($("#dinsp"),`<div class="dph">Inspector</div><div class="dpb">${inspHTML(li,sc)}</div>`);
+  if(!sliding)setH($("#dinsp"),`<div class="dph">Inspector</div><div class="dpb">${inspHTML(li,sc)}</div>`);
   setH($("#dvtabs"),`<div class="dvseg">`+`<button class="dvt${S.tab==="drums"?" on":""}" style="--lc:${DRUMC}" data-d="tab" data-t="drums">Drums <kbd>1</kbd></button>`+
     LAYERS.map((L0,i)=>`<button class="dvt${S.tab===String(i)?" on":""}${sc.layers[i].muted?" muted":""}" style="--lc:${L0.c}" data-d="tab" data-t="${i}">${L0.n} <kbd>${i+2}</kbd></button>`).join("")+
     `</div><span class="dstatus" id="dstatus"></span><span class="sp"></span><span class="dvsec" style="--sc:${SECCOL[S.sel]}">Section ${SL[S.sel]}</span>`);
@@ -1226,14 +1253,23 @@ function deskRender(){
   sizeTimeline();
   if(canv)fit();
 }
+function fxSl(label,k,mn,mx,v,fmt,f){return `<div class="dfxr"><span class="dfl">${label}</span><input type="range" min="${mn}" max="${mx}" step="0.01" value="${v}" data-fk="${k}" data-mn="${mn}" data-mx="${mx}" style="--cc:${fxCol(f.id)};--p:${Math.round((v-mn)/(mx-mn)*100)}%" aria-label="${label}"><span class="dfv" data-fv="${k}">${fmt(v)}</span></div>`;}
+const FXFMT={vol:v=>Math.round(v*100)+"%",fi:v=>v.toFixed(2)+" s",fo:v=>v.toFixed(2)+" s",tone:v=>Math.abs(v)<.03?"Off":v<0?"Dark "+Math.round(-v*100):"Thin "+Math.round(v*100),echo:v=>v<.01?"Off":Math.round(v*100)+"%",verb:v=>v<.01?"Off":Math.round(v*100)+"%"};
 function inspHTML(li,sc){
   let h="";
   if(ui.selFx&&S.fx.includes(ui.selFx)){const f=ui.selFx,fb=fxById(f.id)||{n:f.id};
     h+=`<div class="dgroup"><div class="dgt" style="color:${fxCol(f.id)}">Sound · ${fb.n}</div>
-      <p class="dhint">${barBeat(f.bar)} · ${fxSec(f.id).toFixed(1)} seconds long. Drag it on the timeline to move it.</p>
-      <div class="dmix"><span>Volume</span><span></span><input type="range" id="dfxv" min="0" max="1.5" step="0.01" value="${f.vol}" style="--cc:${fxCol(f.id)};--p:${Math.round(f.vol/1.5*100)}%" aria-label="Sound volume"></div>
-      <div class="drow"><span>Pitch</span><button class="dsq" data-d="fxpitch" data-v="-1" aria-label="Lower">−</button><span class="dnum">${f.pitch>0?"+":""}${f.pitch||0} st</span><button class="dsq" data-d="fxpitch" data-v="1" aria-label="Higher">+</button></div>
-      <p class="dhint">Lower pitch makes it slower, deeper and darker.</p>
+      <select id="dfxid" class="dfxsel" aria-label="Swap sound">${FXG.map((G,gi)=>`<optgroup label="${G.g}">${FXP.filter(q=>q.g===gi).map(q=>`<option value="${q.id}"${q.id===f.id?" selected":""}>${q.n}</option>`).join("")}</optgroup>`).join("")}</select>
+      <p class="dhint">${barBeat(f.bar)} · ${(fxBars(f)*240/S.bpm).toFixed(1)} s. Drag it to move it. Drag its edges to trim it.</p>
+      ${fxSl("Volume","vol",0,1.5,f.vol??1,v=>Math.round(v*100)+"%",f)}
+      <div class="drow"><span class="dfl">Pitch</span><button class="dsq" data-d="fxpitch" data-v="-1" aria-label="Lower">−</button><span class="dnum">${f.pitch>0?"+":""}${f.pitch||0} st</span><button class="dsq" data-d="fxpitch" data-v="1" aria-label="Higher">+</button></div>
+      ${fxSl("Fade in","fi",0,2,f.fi||0,v=>v.toFixed(2)+" s",f)}
+      ${fxSl("Fade out","fo",0,2,f.fo||0,v=>v.toFixed(2)+" s",f)}
+      ${fxSl("Tone","tone",-1,1,f.tone||0,v=>Math.abs(v)<.03?"Off":v<0?"Dark "+Math.round(-v*100):"Thin "+Math.round(v*100),f)}
+      ${fxSl("Echo","echo",0,1,f.echo||0,v=>v<.01?"Off":Math.round(v*100)+"%",f)}
+      ${fxSl("Reverb","verb",0,1,f.verb||0,v=>v<.01?"Off":Math.round(v*100)+"%",f)}
+      <div class="drow"><span class="dfl">Stutter</span><div class="dvseg">${[[0,"Off"],[8,"1/8"],[16,"1/16"],[32,"1/32"]].map(([v,l])=>`<button class="dvt${(f.stut||0)===v?" on":""}" style="--lc:${fxCol(f.id)}" data-d="fxstut" data-v="${v}">${l}</button>`).join("")}</div></div>
+      <div class="drow"><button class="dt${f.rev?" on":""}" style="--cc:${fxCol(f.id)}" data-d="fxrev">${f.rev?"◀ Reversed":"Reverse"}</button><button class="dt" data-d="fxreset">Reset edits</button></div>
       <div class="drow"><button class="dt" data-d="fxprev">▶ Hear it</button><button class="dt" data-d="fxdup" title="Ctrl + D">Duplicate</button><button class="dt danger" data-d="fxdel" title="Delete">Remove</button></div></div>`;}
   if(li<0){
     h+=`<div class="dgroup"><div class="dgt" style="color:${DRUMC}">Drums · Section ${SL[S.sel]}</div>
@@ -1332,10 +1368,16 @@ function drawTL(){
   const FS=F.slice().sort((a,b)=>a.bar-b.bar);
   F.forEach(f=>{const rw=f.row||0,nx=FS.find(o=>o!==f&&(o.row||0)===rw&&o.bar>f.bar),x=f.bar*bp,w=Math.max(10,fxBars(f)*bp),room=(nx?nx.bar*bp:1e9)-(x+w)-8,y=TLY.fx+5+rw*FXROW,h=FXROW-4,col=fxCol(f.id),sel=ui.selFx===f,pk=FXPEAK[f.id];
     g.save();rr(g,x,y,w,h,6);g.clip();g.fillStyle=col+(sel?"40":"26");g.fillRect(x,y,w,h);
-    if(pk){g.fillStyle=col+"aa";const n=pk.length,bw=w/n;for(let i=0;i<n;i++){const a=pk[i]*(h-4)/2;g.fillRect(x+i*bw,y+h/2-a,Math.max(1,bw-.3),a*2);}}
+    if(pk){const d=fxSec(f.id),ts=f.ts||0,te=f.te||0,ln=fxLenSrc(f),stw=f.stut?(stutReps(f.stut)-1)/f.stut*bp:0,ww=w-stw,n=Math.max(8,Math.floor(ww/2)),bw=ww/n;g.fillStyle=col+"aa";
+      for(let i=0;i<n;i++){const fr=f.rev?1-(te+(i+.5)/n*ln)/d:(ts+(i+.5)/n*ln)/d,a=pk[Math.max(0,Math.min(pk.length-1,Math.floor(fr*pk.length)))]*(h-4)/2;g.fillRect(x+stw+i*bw,y+h/2-a,Math.max(1,bw-.3),a*2);}
+      if(stw>0){g.fillStyle=col+"66";const sw=stw/(stutReps(f.stut)-1);for(let k=0;k<stutReps(f.stut)-1;k++){g.fillRect(x+k*sw+1,y+4,Math.max(1,sw-2),h-8);}}
+      const spx=S.bpm/240*bp,fi=(f.fi||0)*spx,fo=(f.fo||0)*spx;g.fillStyle="rgba(0,0,0,.5)";
+      if(fi>1){g.beginPath();g.moveTo(x,y);g.lineTo(x+fi,y);g.lineTo(x,y+h);g.closePath();g.fill();}
+      if(fo>1){g.beginPath();g.moveTo(x+w,y);g.lineTo(x+w-fo,y);g.lineTo(x+w,y+h);g.closePath();g.fill();}
+      if(f.rev){g.fillStyle="#f3f4f7";g.font="700 11px "+SANS();g.fillText("◀",x+w-12,y+h-5);}}
     const fb=fxById(f.id),lab=fb?fb.n:f.id;g.font="700 12px "+SANS();const tw=g.measureText(lab).width;g.restore();
     rr(g,x,y,w,h,6);g.strokeStyle=sel?"#fff":col;g.lineWidth=sel?2:1;g.stroke();
-    if(tw+12<w){g.save();rr(g,x,y,w,h,6);g.clip();g.fillStyle="#f3f4f7";g.fillText(lab,x+6,y+17);g.restore();}
+    g.font="700 12px "+SANS();if(tw+12<w){g.save();rr(g,x,y,w,h,6);g.clip();g.fillStyle="#f3f4f7";g.fillText(lab,x+6,y+17);g.restore();}
     else if(tw<=room||sel){g.fillStyle=sel?"#ffffff":"#d5d9e2";g.fillText(lab,x+w+5,y+17);}});
   if(dropFx!==null){g.fillStyle="#c99bff";rr(g,dropFx*bp-1.5,TLY.fx+4+dropFxRow*FXROW,3,FXROW-2,2);g.fill();}
   if(drag&&drag.t==="move"&&drag.moved){g.fillStyle="#fff";rr(g,drag.insX-1.5,TLY.song+2,3,TL.song-4,2);g.fill();}
@@ -1383,7 +1425,8 @@ function bindTimeline(){
     if(e.target.id!=="tl")return;e.preventDefault();const p=tlPos(e),lane=laneAt(p.y);if(!lane)return;
     try{e.target.setPointerCapture(e.pointerId);}catch(x){}
     if(lane==="ruler"){const bar=Math.max(0,Math.floor(p.x/ui.barPx/S.bars)*S.bars);seekSong(bar);drag={t:"ruler"};return;}
-    if(lane==="fx"){const f=fxAt(p.x,p.y);ui.selKey=null;ui.selClip=null;ui.selFx=f;if(f){drag={t:"fx",o:f,dx:p.x-f.bar*ui.barPx,moved:false};e.target.style.cursor="grabbing";}touch();return;}
+    if(lane==="fx"){const f=fxAt(p.x,p.y);ui.selKey=null;ui.selClip=null;ui.selFx=f;if(f){const x0=f.bar*ui.barPx,x1=x0+fxBars(f)*ui.barPx,edge=x1-x0>30;
+      if(edge&&p.x>x1-7)drag={t:"fxR",o:f};else if(edge&&p.x<x0+7)drag={t:"fxL",o:f};else{drag={t:"fx",o:f,dx:p.x-x0,moved:false};e.target.style.cursor="grabbing";}}touch();return;}
     if(lane==="song"||lane==="moves"){const h=clipAt(p.x);ui.selKey=null;ui.selFx=null;
       if(!h){ui.selClip=null;touch();return;}
       ui.selClip=h.i;
@@ -1400,13 +1443,17 @@ function bindTimeline(){
     if(!drag){const p=tlPos(e),lane=laneAt(p.y),c=e.target;let cur="default",hv=null;
       if(lane==="ruler")cur="pointer";
       else if(lane==="song"){const h=clipAt(p.x);if(h){hv={clip:h.i};cur=p.x>h.x1-10?"ew-resize":"grab";}}
-      else if(lane==="fx"){cur=fxAt(p.x,p.y)?"grab":"default";}
+      else if(lane==="fx"){const f=fxAt(p.x,p.y);if(f){const x0=f.bar*ui.barPx,x1=x0+fxBars(f)*ui.barPx,edge=x1-x0>30;cur=edge&&(p.x>x1-7||p.x<x0+7)?"ew-resize":"grab";}}
       else if(lane==="filter"||lane==="vol"){const Y=v=>TLY[lane]+TL[lane]-6-v*(TL[lane]-12),k=(S.auto[lane]||[]).find(k=>Math.abs(k.bar*ui.barPx-p.x)<8&&Math.abs(Y(k.v)-p.y)<8);hv=k?{key:k}:null;cur=k?"move":"crosshair";}
       c.style.cursor=cur;tlHover=hv;return;}
     const p=tlPos(e);
     if(drag.t==="ruler"){const bar=Math.max(0,Math.floor(p.x/ui.barPx/S.bars)*S.bars);if(bar!==ui.cursor&&!songOn){ui.cursor=bar;}return;}
     if(drag.t==="resize"){const part=S.song[drag.i],loops=Math.max(1,Math.min(lp(64),Math.round((p.x-drag.x0)/(S.bars*ui.barPx))));if(loops!==part.loops){part.loops=loops;sizeTimeline();touch();}return;}
     if(drag.t==="move"){if(Math.abs(p.x-drag.sx)>5)drag.moved=true;if(drag.moved){drag.idx=insertIndexAt(p.x,drag.i);drag.insX=insertX(drag.idx,drag.i);}return;}
+    if(drag.t==="fxR"||drag.t==="fxL"){const f=drag.o,d=fxSec(f.id),rate=fxRate(f),spb=240/S.bpm,lk=f.rev?"te":"ts",rk=f.rev?"ts":"te",nb=Math.max(0,Math.round(p.x/ui.barPx*32)/32);
+      if(drag.t==="fxR"){const stB=f.stut?(stutReps(f.stut)-1)/f.stut:0,vis=Math.max(.02,nb-f.bar-stB),src=vis*spb*rate;f[rk]=Math.max(0,Math.min(d-(f[lk]||0)-.05,d-(f[lk]||0)-src));}
+      else{const cur=f[lk]||0,nl=Math.max(0,Math.min(d-(f[rk]||0)-.05,cur+(nb-f.bar)*spb*rate));f.bar=Math.max(0,f.bar+(nl-cur)/rate/spb);f[lk]=nl;}
+      touch();return;}
     if(drag.t==="fx"){const nb=snapQ((p.x-drag.dx)/ui.barPx),nr=fxRowAt(p.y);if(nb!==drag.o.bar||nr!==(drag.o.row||0)){drag.o.bar=nb;drag.o.row=nr;drag.moved=true;touch();}return;}
     if(drag.t==="key"){const n=keyFromPos(drag.lane,p.x,p.y);drag.o.bar=n.bar;drag.o.v=n.v;S.auto[drag.lane].sort((a,b)=>a.bar-b.bar);touch();}
   });
@@ -1500,6 +1547,9 @@ async function deskAct(a,t){
     case"side":ui.side=t.dataset.v;break;
     case"fxprev":if(ui.selFx)previewFx(ui.selFx.id,ui.selFx);return;
     case"fxpitch":if(ui.selFx){ui.selFx.pitch=Math.max(-12,Math.min(12,(ui.selFx.pitch||0)+(+t.dataset.v)));}break;
+    case"fxrev":if(ui.selFx){const f=ui.selFx,a=f.ts||0;f.rev=!f.rev;}break;
+    case"fxstut":if(ui.selFx){ui.selFx.stut=+t.dataset.v||0;}break;
+    case"fxreset":if(ui.selFx){["ts","te","fi","fo","tone","echo","verb","rev","stut"].forEach(k=>delete ui.selFx[k]);}break;
     case"fxdel":if(ui.selFx){S.fx.splice(S.fx.indexOf(ui.selFx),1);ui.selFx=null;}break;
     case"fxdup":if(ui.selFx){const o=Object.assign({},ui.selFx,{bar:ui.selFx.bar+Math.ceil(fxBars(ui.selFx)*4)/4,row:null});o.row=freeRow(o.bar,fxBars(o),o);S.fx.push(o);ui.selFx=o;}break;
     case"keydel":if(ui.selKey){const arr=S.auto[ui.selKey.lane],i=arr.indexOf(ui.selKey.o);if(i>=0)arr.splice(i,1);ui.selKey=null;}break;
@@ -1514,9 +1564,9 @@ function bindDesk(){
   root.addEventListener("input",e=>{const t=e.target,v=+t.value,sc=sec();
     if(/^dmx\d$/.test(t.id)){t.style.setProperty("--p",Math.round(v*100)+"%");const i=+t.id.slice(3);if(i===0){sc.dvol=v;if(A)A.dg.gain.rampTo(sc.dmute?0:v,.04);}else{sc.layers[i-1].vol=v;applySound(i-1);}save();}
     else if(t.id==="dname"){S.name=t.value;save();return;}
-    else if(t.id==="dfxv"&&ui.selFx){ui.selFx.vol=v;t.style.setProperty("--p",Math.round(v/1.5*100)+"%");save();}
+    else if(t.dataset.fk&&ui.selFx){const k=t.dataset.fk,mn=+t.dataset.mn,mx=+t.dataset.mx;ui.selFx[k]=v;t.style.setProperty("--p",Math.round((v-mn)/(mx-mn)*100)+"%");const lab=t.parentNode.querySelector("[data-fv]");if(lab)lab.textContent=FXFMT[k](v);save();}
     else if(t.id==="dzoom"){ui.barPx=v;t.style.setProperty("--p",Math.round((v-8)/88*100)+"%");sizeTimeline();fitTL();}});
-  root.addEventListener("change",e=>{if(e.target.id==="dkey"){S.key=+e.target.value;save();touch();renderSurface();}if(e.target.id==="dcopy")ui.copyTo=+e.target.value;});
+  root.addEventListener("change",e=>{if(e.target.id==="dfxid"&&ui.selFx){ui.selFx.id=e.target.value;delete ui.selFx.ts;delete ui.selFx.te;save();touch();previewFx(ui.selFx.id,ui.selFx);return;}if(e.target.id==="dkey"){S.key=+e.target.value;save();touch();renderSurface();}if(e.target.id==="dcopy")ui.copyTo=+e.target.value;});
   root.addEventListener("dragstart",e=>{const fc=e.target.closest&&e.target.closest("[data-fx]");if(fc){e.dataTransfer.setData("text/wub-fx",fc.dataset.fx);e.dataTransfer.effectAllowed="copy";return;}
     const c=e.target.closest&&e.target.closest("[data-drag]");if(!c)return;e.dataTransfer.setData("text/wub-sec",c.dataset.drag);e.dataTransfer.effectAllowed="copy";});
   bindTimeline();bindViewer();
